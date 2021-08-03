@@ -12,6 +12,12 @@ impl Atom {
     fn nil() -> Atom {
         Atom::new("nil")
     }
+    fn r#true() -> Atom {
+        Atom::new("true")
+    }
+    fn r#false() -> Atom {
+        Atom::new("false")
+    }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -173,22 +179,96 @@ fn test_parse() {
     assert_eq!(parse(")"), Err(ParseError::UnmatchedClosingParen));
 }
 
-type EvaluationResult = Result<Expression, String>;
+#[derive(Debug, Eq, PartialEq)]
+enum EvaluationError {
+    UnknownFunctionName,
+    WrongNumberOfArguments,
+}
+type EvaluationResult = Result<Expression, EvaluationError>;
+
+// macro_rules! unwrap_cons_list {
+//     ($expression:expr, $length:expr) => {
+//         unwrap_cons_list!($expression, $length, ())
+//     };
+//     ($expression:expr, $length:expr, ($($already_unwrapped:expr)*)) => {{
+//         if $length == 0 {
+//             if $expression == &Expression::Atom(Atom::nil()) {
+//                 Ok(($($already_unwrapped),*))
+//             } else {
+//                 Err(EvaluationError::WrongNumberOfArguments)
+//             }
+//         } else {
+//             if let Expression::Cons(cons) = $expression {
+
+//             }
+//         }
+//         // match ($expression, $length) {
+//         //     (Expression::Atom(Atom::nil()), 0) => ()
+//         // }
+//     }};
+// }
+
+fn _evaluate_eq(expression: &Expression) -> EvaluationResult {
+    // let (a, b) = unwrap_cons_list!(expression, 2);
+    if let Expression::Cons(cons) = expression {
+        let a = evaluate(cons.car.as_ref())?;
+        if let Expression::Cons(cons) = cons.cdr.as_ref() {
+            let b = evaluate(cons.car.as_ref())?;
+            if cons.cdr.as_ref() != &Expression::Atom(Atom::nil()) {
+                return Err(EvaluationError::WrongNumberOfArguments);
+            }
+            if a == b {
+                return Ok(Expression::Atom(Atom::r#true()));
+            } else {
+                return Ok(Expression::Atom(Atom::r#false()));
+            }
+        }
+    }
+    Err(EvaluationError::WrongNumberOfArguments)
+}
+
+fn _evaluate(function_name: &Atom, expression: &Expression) -> EvaluationResult {
+    match &function_name.string as &str {
+        "eq?" => _evaluate_eq(expression),
+        _ => Err(EvaluationError::UnknownFunctionName),
+    }
+}
 
 fn evaluate(expression: &Expression) -> EvaluationResult {
     match expression {
         Expression::Atom(atom) => Ok(Expression::Atom(atom.clone())),
         Expression::Cons(cons) => {
             match cons.car.as_ref() {
-                Expression::Cons(_) => Err(String::from("")),
-                Expression::Atom(function_name) => Ok(Expression::Atom(Atom::new(&format!(
-                    "calling {}",
-                    function_name.string
-                )))),
+                Expression::Cons(_) => Err(EvaluationError::WrongNumberOfArguments),
+                // Expression::Atom(function_name) => Ok(Expression::Atom(Atom::new(&format!(
+                //     "calling {}",
+                //     function_name.string
+                // )))),
+                Expression::Atom(function_name) => _evaluate(function_name, cons.cdr.as_ref()),
             }
             // Ok(Expression::Atom(Atom::new("foo")))
         }
     }
+}
+
+#[test]
+fn test_evaluate() {
+    assert_eq!(
+        evaluate(&parse("(eq? 1 1)").unwrap()),
+        Ok(Expression::Atom(Atom::r#true()))
+    );
+    assert_eq!(
+        evaluate(&parse("(eq? foo foo)").unwrap()),
+        Ok(Expression::Atom(Atom::r#true()))
+    );
+    assert_eq!(
+        evaluate(&parse("(eq? foo bar)").unwrap()),
+        Ok(Expression::Atom(Atom::r#false()))
+    );
+    assert_eq!(
+        evaluate(&parse("(eq? (eq? 1 1) true)").unwrap()),
+        Ok(Expression::Atom(Atom::r#true()))
+    );
 }
 
 fn main() {
