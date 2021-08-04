@@ -44,6 +44,18 @@ macro_rules! cons {
     };
 }
 
+macro_rules! list {
+    () => {
+        atom!("nil")
+    };
+    ($car:expr) => {
+        cons!(&$car, &atom!("nil"))
+    };
+    ($car:expr, $($cdr:expr),*) => {
+        cons!(&$car, &list!($($cdr),*))
+    };
+}
+
 fn pop_token(string: &str) -> (Option<String>, String) {
     if string.len() <= 0 {
         return (None, String::new());
@@ -137,10 +149,9 @@ fn parse_expression(string: &str) -> (ParseResult, String) {
             ")" => (Err(ParseError::UnmatchedClosingParen), remainder),
             "'" => match parse_expression(&remainder) {
                 (Err(err), remainder) => (Err(err), remainder),
-                (Ok(quoted_value), remainder) => (
-                    Ok(cons!(&atom!("quote"), &cons!(&quoted_value, &atom!("nil")))),
-                    remainder,
-                ),
+                (Ok(quoted_value), remainder) => {
+                    (Ok(list!(atom!("quote"), quoted_value)), remainder)
+                }
             },
             token => (Ok(atom!(token)), remainder),
         },
@@ -175,23 +186,17 @@ fn parse(string: &str) -> ParseResult {
 fn test_parse() {
     assert_eq!(parse("aaa"), Ok(atom!("aaa")));
     assert_eq!(parse("()"), Ok(atom!("nil")));
-    assert_eq!(parse("(aaa)"), Ok(cons!(&atom!("aaa"), &atom!("nil"))));
+    assert_eq!(parse("(aaa)"), Ok(list!(atom!("aaa"))));
     assert_eq!(
         parse("  (  aaa   bbb  )  "),
-        Ok(cons!(&atom!("aaa"), &cons!(&atom!("bbb"), &atom!("nil"))))
+        Ok(list!(atom!("aaa"), atom!("bbb")))
     );
     assert_eq!(parse("("), Err(ParseError::UnexpectedEOF));
     assert_eq!(parse(")"), Err(ParseError::UnmatchedClosingParen));
-    assert_eq!(
-        parse("'aaa"),
-        Ok(cons!(&atom!("quote"), &cons!(&atom!("aaa"), &atom!("nil"))))
-    );
+    assert_eq!(parse("'aaa"), Ok(list!(atom!("quote"), atom!("aaa"))));
     assert_eq!(
         parse("'(aaa)"),
-        Ok(cons!(
-            &atom!("quote"),
-            &cons!(&cons!(&atom!("aaa"), &atom!("nil")), &atom!("nil"))
-        ))
+        Ok(list!(atom!("quote"), list!(atom!("aaa"))))
     );
 }
 
@@ -294,10 +299,7 @@ fn test_evaluate_eq() {
 #[test]
 fn test_quote() {
     assert_eq!(evaluate(&parse("'foo").unwrap()), Ok(atom!("foo"),));
-    assert_eq!(
-        evaluate(&parse("'(foo)").unwrap()),
-        Ok(cons!(&atom!("foo"), &atom!("nil")))
-    );
+    assert_eq!(evaluate(&parse("'(foo)").unwrap()), Ok(list!(atom!("foo"))));
     assert_eq!(
         evaluate(&parse("(eq? (eq? 1 1) (eq? 1 1))").unwrap()),
         Ok(atom!("true"))
@@ -320,7 +322,7 @@ fn test_cons() {
     );
     assert_eq!(
         evaluate(&parse("(cons foo nil)").unwrap()),
-        Ok(cons!(&atom!("foo"), &atom!("nil")))
+        Ok(list!(atom!("foo")))
     );
     assert_eq!(
         evaluate(&parse("(eq? (cons foo nil) '(foo))").unwrap()),
