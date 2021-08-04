@@ -52,7 +52,7 @@ fn pop_token(string: &str) -> (Option<String>, String) {
         return pop_token(remainder);
     }
     match first_char {
-        '(' | ')' => (Some(String::from(first_char)), String::from(remainder)),
+        '(' | ')' | '\'' => (Some(String::from(first_char)), String::from(remainder)),
         _ => {
             let mut atom = String::from(first_char);
             while remainder.len() > 0 {
@@ -73,6 +73,7 @@ fn test_pop_token() {
     assert_eq!(pop_token(""), (None, String::new()));
     assert_eq!(pop_token("("), (Some(String::from("(")), String::new()));
     assert_eq!(pop_token(")"), (Some(String::from(")")), String::new()));
+    assert_eq!(pop_token("'"), (Some(String::from("'")), String::new()));
     assert_eq!(
         pop_token("aaaa"),
         (Some(String::from("aaaa")), String::new())
@@ -84,6 +85,10 @@ fn test_pop_token_trim_whitespace() {
     assert_eq!(pop_token(" "), (None, String::new()));
     assert_eq!(pop_token(" \n("), (Some(String::from("(")), String::new()));
     assert_eq!(pop_token(" \t )"), (Some(String::from(")")), String::new()));
+    assert_eq!(
+        pop_token("  ' "),
+        (Some(String::from("'")), String::from(" "))
+    );
     assert_eq!(
         pop_token("    aaaa"),
         (Some(String::from("aaaa")), String::new())
@@ -108,6 +113,10 @@ fn test_pop_token_multiple_tokens() {
         pop_token("+++)"),
         (Some(String::from("+++")), String::from(")"))
     );
+    assert_eq!(
+        pop_token("'()"),
+        (Some(String::from("'")), String::from("()"))
+    );
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -123,6 +132,16 @@ fn parse_expression(string: &str) -> (ParseResult, String) {
         (Some(token), remainder) => match &token as &str {
             "(" => parse_list(&remainder),
             ")" => (Err(ParseError::UnmatchedClosingParen), remainder),
+            "'" => match parse_expression(&remainder) {
+                (Err(err), remainder) => (Err(err), remainder),
+                (Ok(quoted_value), remainder) => (
+                    Ok(Expression::Cons(Cons::new(
+                        &Expression::Atom(Atom::new("quote")),
+                        &Expression::Cons(Cons::new(&quoted_value, &Expression::Atom(Atom::nil()))),
+                    ))),
+                    remainder,
+                ),
+            },
             token => (Ok(Expression::Atom(Atom::new(token))), remainder),
         },
     }
@@ -177,6 +196,16 @@ fn test_parse() {
     );
     assert_eq!(parse("("), Err(ParseError::UnexpectedEOF));
     assert_eq!(parse(")"), Err(ParseError::UnmatchedClosingParen));
+    assert_eq!(
+        parse("'aaa"),
+        Ok(Expression::Cons(Cons::new(
+            &Expression::Atom(Atom::new("quote")),
+            &Expression::Cons(Cons::new(
+                &Expression::Atom(Atom::new("aaa")),
+                &Expression::Atom(Atom::new("nil"))
+            ))
+        )))
+    );
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -222,9 +251,14 @@ fn _evaluate_eq(expression: &Expression) -> EvaluationResult {
     }
 }
 
+fn _evaluate_quote(expression: &Expression) -> EvaluationResult {
+    Ok(expression.clone())
+}
+
 fn _evaluate(function_name: &Atom, expression: &Expression) -> EvaluationResult {
     match &function_name.string as &str {
         "eq?" => _evaluate_eq(expression),
+        "quote" => _evaluate_quote(expression),
         _ => Err(EvaluationError::UnknownFunctionName),
     }
 }
@@ -240,7 +274,7 @@ fn evaluate(expression: &Expression) -> EvaluationResult {
 }
 
 #[test]
-fn test_evaluate() {
+fn test_evaluate_eq() {
     assert_eq!(
         evaluate(&parse("(eq? 1 1)").unwrap()),
         Ok(Expression::Atom(Atom::r#true()))
@@ -256,6 +290,18 @@ fn test_evaluate() {
     assert_eq!(
         evaluate(&parse("(eq? (eq? 1 1) true)").unwrap()),
         Ok(Expression::Atom(Atom::r#true()))
+    );
+}
+
+#[test]
+fn test_quote() {
+    assert_eq!(
+        evaluate(&parse("(eq? (eq? 1 1) (eq? 1 1))").unwrap()),
+        Ok(Expression::Atom(Atom::r#true()))
+    );
+    assert_eq!(
+        evaluate(&parse("(eq? '(eq? 1 1) (eq? 1 1))").unwrap()),
+        Ok(Expression::Atom(Atom::r#false()))
     );
 }
 
