@@ -9,15 +9,6 @@ impl Atom {
             string: String::from(string),
         }
     }
-    fn nil() -> Atom {
-        Atom::new("nil")
-    }
-    fn r#true() -> Atom {
-        Atom::new("true")
-    }
-    fn r#false() -> Atom {
-        Atom::new("false")
-    }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -39,6 +30,18 @@ impl Cons {
 enum Expression {
     Atom(Atom),
     Cons(Cons),
+}
+
+macro_rules! atom {
+    ($atom:expr) => {
+        Expression::Atom(Atom::new($atom))
+    };
+}
+
+macro_rules! cons {
+    ($left:expr, $right:expr) => {
+        Expression::Cons(Cons::new($left, $right))
+    };
 }
 
 fn pop_token(string: &str) -> (Option<String>, String) {
@@ -135,14 +138,11 @@ fn parse_expression(string: &str) -> (ParseResult, String) {
             "'" => match parse_expression(&remainder) {
                 (Err(err), remainder) => (Err(err), remainder),
                 (Ok(quoted_value), remainder) => (
-                    Ok(Expression::Cons(Cons::new(
-                        &Expression::Atom(Atom::new("quote")),
-                        &Expression::Cons(Cons::new(&quoted_value, &Expression::Atom(Atom::nil()))),
-                    ))),
+                    Ok(cons!(&atom!("quote"), &cons!(&quoted_value, &atom!("nil")))),
                     remainder,
                 ),
             },
-            token => (Ok(Expression::Atom(Atom::new(token))), remainder),
+            token => (Ok(atom!(token)), remainder),
         },
     }
 }
@@ -152,13 +152,11 @@ fn parse_list(string: &str) -> (ParseResult, String) {
     match parse_expression(string) {
         // An UnmatchedClosingParen actually means we encountered the end of the list
         // Lists are terminated with a nil atom, so just return that
-        (Err(ParseError::UnmatchedClosingParen), remainder) => {
-            (Ok(Expression::Atom(Atom::nil())), remainder)
-        }
+        (Err(ParseError::UnmatchedClosingParen), remainder) => (Ok(atom!("nil")), remainder),
         (Ok(car), remainder) => {
             let (cdr, remainder) = parse_list(&remainder);
             if let Ok(cdr) = cdr {
-                (Ok(Expression::Cons(Cons::new(&car, &cdr))), remainder)
+                (Ok(cons!(&car, &cdr)), remainder)
             } else {
                 // This will only happen if cdr is an Err
                 (cdr, remainder)
@@ -175,49 +173,25 @@ fn parse(string: &str) -> ParseResult {
 
 #[test]
 fn test_parse() {
-    assert_eq!(parse("aaa"), Ok(Expression::Atom(Atom::new("aaa"))));
-    assert_eq!(parse("()"), Ok(Expression::Atom(Atom::new("nil"))));
-    assert_eq!(
-        parse("(aaa)"),
-        Ok(Expression::Cons(Cons::new(
-            &Expression::Atom(Atom::new("aaa")),
-            &Expression::Atom(Atom::new("nil"))
-        )))
-    );
+    assert_eq!(parse("aaa"), Ok(atom!("aaa")));
+    assert_eq!(parse("()"), Ok(atom!("nil")));
+    assert_eq!(parse("(aaa)"), Ok(cons!(&atom!("aaa"), &atom!("nil"))));
     assert_eq!(
         parse("  (  aaa   bbb  )  "),
-        Ok(Expression::Cons(Cons::new(
-            &Expression::Atom(Atom::new("aaa")),
-            &Expression::Cons(Cons::new(
-                &Expression::Atom(Atom::new("bbb")),
-                &Expression::Atom(Atom::new("nil"))
-            ))
-        )))
+        Ok(cons!(&atom!("aaa"), &cons!(&atom!("bbb"), &atom!("nil"))))
     );
     assert_eq!(parse("("), Err(ParseError::UnexpectedEOF));
     assert_eq!(parse(")"), Err(ParseError::UnmatchedClosingParen));
     assert_eq!(
         parse("'aaa"),
-        Ok(Expression::Cons(Cons::new(
-            &Expression::Atom(Atom::new("quote")),
-            &Expression::Cons(Cons::new(
-                &Expression::Atom(Atom::new("aaa")),
-                &Expression::Atom(Atom::new("nil"))
-            ))
-        )))
+        Ok(cons!(&atom!("quote"), &cons!(&atom!("aaa"), &atom!("nil"))))
     );
     assert_eq!(
         parse("'(aaa)"),
-        Ok(Expression::Cons(Cons::new(
-            &Expression::Atom(Atom::new("quote")),
-            &Expression::Cons(Cons::new(
-                &Expression::Cons(Cons::new(
-                    &Expression::Atom(Atom::new("aaa")),
-                    &Expression::Atom(Atom::new("nil"))
-                )),
-                &Expression::Atom(Atom::new("nil"))
-            ))
-        )))
+        Ok(cons!(
+            &atom!("quote"),
+            &cons!(&cons!(&atom!("aaa"), &atom!("nil")), &atom!("nil"))
+        ))
     );
 }
 
@@ -245,7 +219,7 @@ impl Expression {
         }
     }
     fn assert_empty(&self) -> Result<(), EvaluationError> {
-        if self == &Expression::Atom(Atom::nil()) {
+        if self == &atom!("nil") {
             return Ok(());
         }
         return Err(EvaluationError::WrongNumberOfArguments);
@@ -258,15 +232,15 @@ fn _evaluate_eq(expression: &Expression) -> EvaluationResult {
     expression.cdr()?.cdr()?.assert_empty()?;
 
     if a == b {
-        Ok(Expression::Atom(Atom::r#true()))
+        Ok(atom!("true"))
     } else {
-        Ok(Expression::Atom(Atom::r#false()))
+        Ok(atom!("false"))
     }
 }
 
 fn _evaluate_quote(expression: &Expression) -> EvaluationResult {
     if let Expression::Cons(cons) = expression {
-        if cons.cdr.as_ref() == &Expression::Atom(Atom::nil()) {
+        if cons.cdr.as_ref() == &atom!("nil") {
             return Ok(cons.car.as_ref().clone());
         }
     }
@@ -278,7 +252,7 @@ fn _evaluate_cons(expression: &Expression) -> EvaluationResult {
     let b = evaluate(&expression.cdr()?.car()?)?;
     expression.cdr()?.cdr()?.assert_empty()?;
 
-    Ok(Expression::Cons(Cons::new(&a, &b)))
+    Ok(cons!(&a, &b))
 }
 
 fn _evaluate(function_name: &Atom, expression: &Expression) -> EvaluationResult {
@@ -302,48 +276,39 @@ fn evaluate(expression: &Expression) -> EvaluationResult {
 
 #[test]
 fn test_evaluate_eq() {
-    assert_eq!(
-        evaluate(&parse("(eq? 1 1)").unwrap()),
-        Ok(Expression::Atom(Atom::r#true()))
-    );
+    assert_eq!(evaluate(&parse("(eq? 1 1)").unwrap()), Ok(atom!("true")));
     assert_eq!(
         evaluate(&parse("(eq? foo foo)").unwrap()),
-        Ok(Expression::Atom(Atom::r#true()))
+        Ok(atom!("true"))
     );
     assert_eq!(
         evaluate(&parse("(eq? foo bar)").unwrap()),
-        Ok(Expression::Atom(Atom::r#false()))
+        Ok(atom!("false"))
     );
     assert_eq!(
         evaluate(&parse("(eq? (eq? 1 1) true)").unwrap()),
-        Ok(Expression::Atom(Atom::r#true()))
+        Ok(atom!("true"))
     );
 }
 
 #[test]
 fn test_quote() {
-    assert_eq!(
-        evaluate(&parse("'foo").unwrap()),
-        Ok(Expression::Atom(Atom::new("foo")),)
-    );
+    assert_eq!(evaluate(&parse("'foo").unwrap()), Ok(atom!("foo"),));
     assert_eq!(
         evaluate(&parse("'(foo)").unwrap()),
-        Ok(Expression::Cons(Cons::new(
-            &Expression::Atom(Atom::new("foo")),
-            &Expression::Atom(Atom::new("nil")),
-        )))
+        Ok(cons!(&atom!("foo"), &atom!("nil")))
     );
     assert_eq!(
         evaluate(&parse("(eq? (eq? 1 1) (eq? 1 1))").unwrap()),
-        Ok(Expression::Atom(Atom::r#true()))
+        Ok(atom!("true"))
     );
     assert_eq!(
         evaluate(&parse("(eq? '(eq? 1 1) (eq? 1 1))").unwrap()),
-        Ok(Expression::Atom(Atom::r#false()))
+        Ok(atom!("false"))
     );
     assert_eq!(
         evaluate(&parse("(eq? '(a b c) (quote (a b c)))").unwrap()),
-        Ok(Expression::Atom(Atom::r#true()))
+        Ok(atom!("true"))
     );
 }
 
@@ -351,32 +316,23 @@ fn test_quote() {
 fn test_cons() {
     assert_eq!(
         evaluate(&parse("(cons 1 2)").unwrap()),
-        Ok(Expression::Cons(Cons::new(
-            &Expression::Atom(Atom::new("1")),
-            &Expression::Atom(Atom::new("2")),
-        )))
+        Ok(cons!(&atom!("1"), &atom!("2")))
     );
     assert_eq!(
         evaluate(&parse("(cons foo nil)").unwrap()),
-        Ok(Expression::Cons(Cons::new(
-            &Expression::Atom(Atom::new("foo")),
-            &Expression::Atom(Atom::new("nil")),
-        )))
+        Ok(cons!(&atom!("foo"), &atom!("nil")))
     );
     assert_eq!(
         evaluate(&parse("(eq? (cons foo nil) '(foo))").unwrap()),
-        Ok(Expression::Atom(Atom::r#true()))
+        Ok(atom!("true"))
     );
 }
 
 fn main() {
-    let e: Expression = Expression::Atom(Atom::new("yes"));
+    let e: Expression = atom!("yes");
     println!("Hello, world! {:?}", e);
     println!("Hello, world! {:?}", evaluate(&e));
-    let e: Expression = Expression::Cons(Cons::new(
-        &Expression::Atom(Atom::new("A")),
-        &Expression::Atom(Atom::new("B")),
-    ));
+    let e: Expression = cons!(&atom!("A"), &atom!("B"));
     println!("Hello, world! {:?}", e);
     println!("Hello, world! {:?}", evaluate(&e));
     println!("{:?}", pop_token("aa"));
