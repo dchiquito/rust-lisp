@@ -303,6 +303,10 @@ fn test_quote() {
         evaluate(&parse("(eq? '(eq? 1 1) (eq? 1 1))").unwrap()),
         Ok(Expression::Atom(Atom::r#false()))
     );
+    assert_eq!(
+        evaluate(&parse("(eq? '(a b c) (quote (a b c)))").unwrap()),
+        Ok(Expression::Atom(Atom::r#true()))
+    );
 }
 
 fn main() {
