@@ -1,60 +1,6 @@
-#[derive(Clone, Debug, Eq, PartialEq)]
-struct Atom {
-    string: String,
-}
+mod types;
 
-impl Atom {
-    fn new(string: &str) -> Atom {
-        Atom {
-            string: String::from(string),
-        }
-    }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-struct Cons {
-    car: Box<Expression>,
-    cdr: Box<Expression>,
-}
-
-impl Cons {
-    fn new(car: &Expression, cdr: &Expression) -> Cons {
-        Cons {
-            car: Box::new(car.clone()),
-            cdr: Box::new(cdr.clone()),
-        }
-    }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-enum Expression {
-    Atom(Atom),
-    Cons(Cons),
-}
-
-macro_rules! atom {
-    ($atom:expr) => {
-        Expression::Atom(Atom::new($atom))
-    };
-}
-
-macro_rules! cons {
-    ($left:expr, $right:expr) => {
-        Expression::Cons(Cons::new($left, $right))
-    };
-}
-
-macro_rules! list {
-    () => {
-        atom!("nil")
-    };
-    ($car:expr) => {
-        cons!(&$car, &atom!("nil"))
-    };
-    ($car:expr, $($cdr:expr),*) => {
-        cons!(&$car, &list!($($cdr),*))
-    };
-}
+pub use crate::types::*;
 
 fn pop_token(string: &str) -> (Option<String>, String) {
     if string.len() <= 0 {
