@@ -255,10 +255,19 @@ fn _evaluate_quote(expression: &Expression) -> EvaluationResult {
     Ok(expression.clone())
 }
 
+fn _evaluate_cons(expression: &Expression) -> EvaluationResult {
+    let a = evaluate(&expression.car()?)?;
+    let b = evaluate(&expression.cdr()?.car()?)?;
+    expression.cdr()?.cdr()?.assert_empty()?;
+
+    Ok(Expression::Cons(Cons::new(&a, &b)))
+}
+
 fn _evaluate(function_name: &Atom, expression: &Expression) -> EvaluationResult {
     match &function_name.string as &str {
         "eq?" => _evaluate_eq(expression),
         "quote" => _evaluate_quote(expression),
+        "cons" => _evaluate_cons(expression),
         _ => Err(EvaluationError::UnknownFunctionName),
     }
 }
@@ -305,6 +314,28 @@ fn test_quote() {
     );
     assert_eq!(
         evaluate(&parse("(eq? '(a b c) (quote (a b c)))").unwrap()),
+        Ok(Expression::Atom(Atom::r#true()))
+    );
+}
+
+#[test]
+fn test_cons() {
+    assert_eq!(
+        evaluate(&parse("(cons 1 2)").unwrap()),
+        Ok(Expression::Cons(Cons::new(
+            &Expression::Atom(Atom::new("1")),
+            &Expression::Atom(Atom::new("2")),
+        )))
+    );
+    assert_eq!(
+        evaluate(&parse("(cons foo nil)").unwrap()),
+        Ok(Expression::Cons(Cons::new(
+            &Expression::Atom(Atom::new("foo")),
+            &Expression::Atom(Atom::new("nil")),
+        )))
+    );
+    assert_eq!(
+        evaluate(&parse("(eq? (cons foo nil) '(foo))").unwrap()),
         Ok(Expression::Atom(Atom::r#true()))
     );
 }
