@@ -204,6 +204,7 @@ fn test_parse() {
 enum EvaluationError {
     UnknownFunctionName,
     WrongNumberOfArguments,
+    InvalidArgument,
 }
 type EvaluationResult = Result<Expression, EvaluationError>;
 
@@ -260,11 +261,33 @@ fn _evaluate_cons(expression: &Expression) -> EvaluationResult {
     Ok(cons!(&a, &b))
 }
 
+fn _evaluate_car(expression: &Expression) -> EvaluationResult {
+    let cons = evaluate(&expression.car()?)?;
+    expression.cdr()?.assert_empty()?;
+    if let Expression::Cons(cons) = cons {
+        Ok(cons.car.as_ref().clone())
+    } else {
+        Err(EvaluationError::InvalidArgument)
+    }
+}
+
+fn _evaluate_cdr(expression: &Expression) -> EvaluationResult {
+    let cons = evaluate(&expression.car()?)?;
+    expression.cdr()?.assert_empty()?;
+    if let Expression::Cons(cons) = cons {
+        Ok(cons.cdr.as_ref().clone())
+    } else {
+        Err(EvaluationError::InvalidArgument)
+    }
+}
+
 fn _evaluate(function_name: &Atom, expression: &Expression) -> EvaluationResult {
     match &function_name.string as &str {
         "eq?" => _evaluate_eq(expression),
         "quote" => _evaluate_quote(expression),
         "cons" => _evaluate_cons(expression),
+        "car" => _evaluate_car(expression),
+        "cdr" => _evaluate_cdr(expression),
         _ => Err(EvaluationError::UnknownFunctionName),
     }
 }
@@ -321,12 +344,43 @@ fn test_cons() {
         Ok(cons!(&atom!("1"), &atom!("2")))
     );
     assert_eq!(
+        evaluate(&parse("(cons '1 '2)").unwrap()),
+        Ok(cons!(&atom!("1"), &atom!("2")))
+    );
+    assert_eq!(
+        evaluate(&parse("(cons (eq? 1 1) (eq? 1 2))").unwrap()),
+        Ok(cons!(&atom!("true"), &atom!("false")))
+    );
+    assert_eq!(
         evaluate(&parse("(cons foo nil)").unwrap()),
         Ok(list!(atom!("foo")))
     );
     assert_eq!(
         evaluate(&parse("(eq? (cons foo nil) '(foo))").unwrap()),
         Ok(atom!("true"))
+    );
+}
+
+#[test]
+fn test_car() {
+    assert_eq!(evaluate(&parse("(car '(1))").unwrap()), Ok(atom!("1")));
+    assert_eq!(evaluate(&parse("(car '(1 2 3))").unwrap()), Ok(atom!("1")));
+    assert_eq!(
+        evaluate(&parse("(car (cons foo bar))").unwrap()),
+        Ok(atom!("foo"))
+    );
+}
+
+#[test]
+fn test_cdr() {
+    assert_eq!(evaluate(&parse("(cdr '(1))").unwrap()), Ok(atom!("nil")));
+    assert_eq!(
+        evaluate(&parse("(cdr '(1 2 3))").unwrap()),
+        Ok(list!(atom!("2"), atom!("3")))
+    );
+    assert_eq!(
+        evaluate(&parse("(cdr (cons foo bar))").unwrap()),
+        Ok(atom!("bar"))
     );
 }
 
