@@ -206,6 +206,19 @@ fn test_parse() {
             ))
         )))
     );
+    assert_eq!(
+        parse("'(aaa)"),
+        Ok(Expression::Cons(Cons::new(
+            &Expression::Atom(Atom::new("quote")),
+            &Expression::Cons(Cons::new(
+                &Expression::Cons(Cons::new(
+                    &Expression::Atom(Atom::new("aaa")),
+                    &Expression::Atom(Atom::new("nil"))
+                )),
+                &Expression::Atom(Atom::new("nil"))
+            ))
+        )))
+    );
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -252,7 +265,12 @@ fn _evaluate_eq(expression: &Expression) -> EvaluationResult {
 }
 
 fn _evaluate_quote(expression: &Expression) -> EvaluationResult {
-    Ok(expression.clone())
+    if let Expression::Cons(cons) = expression {
+        if cons.cdr.as_ref() == &Expression::Atom(Atom::nil()) {
+            return Ok(cons.car.as_ref().clone());
+        }
+    }
+    Err(EvaluationError::WrongNumberOfArguments)
 }
 
 fn _evaluate_cons(expression: &Expression) -> EvaluationResult {
@@ -304,6 +322,17 @@ fn test_evaluate_eq() {
 
 #[test]
 fn test_quote() {
+    assert_eq!(
+        evaluate(&parse("'foo").unwrap()),
+        Ok(Expression::Atom(Atom::new("foo")),)
+    );
+    assert_eq!(
+        evaluate(&parse("'(foo)").unwrap()),
+        Ok(Expression::Cons(Cons::new(
+            &Expression::Atom(Atom::new("foo")),
+            &Expression::Atom(Atom::new("nil")),
+        )))
+    );
     assert_eq!(
         evaluate(&parse("(eq? (eq? 1 1) (eq? 1 1))").unwrap()),
         Ok(Expression::Atom(Atom::r#true()))
