@@ -186,45 +186,40 @@ enum EvaluationError {
 }
 type EvaluationResult = Result<Expression, EvaluationError>;
 
-// macro_rules! unwrap_cons_list {
-//     ($expression:expr, $length:expr) => {
-//         unwrap_cons_list!($expression, $length, ())
-//     };
-//     ($expression:expr, $length:expr, ($($already_unwrapped:expr)*)) => {{
-//         if $length == 0 {
-//             if $expression == &Expression::Atom(Atom::nil()) {
-//                 Ok(($($already_unwrapped),*))
-//             } else {
-//                 Err(EvaluationError::WrongNumberOfArguments)
-//             }
-//         } else {
-//             if let Expression::Cons(cons) = $expression {
-
-//             }
-//         }
-//         // match ($expression, $length) {
-//         //     (Expression::Atom(Atom::nil()), 0) => ()
-//         // }
-//     }};
-// }
-
-fn _evaluate_eq(expression: &Expression) -> EvaluationResult {
-    // let (a, b) = unwrap_cons_list!(expression, 2);
-    if let Expression::Cons(cons) = expression {
-        let a = evaluate(cons.car.as_ref())?;
-        if let Expression::Cons(cons) = cons.cdr.as_ref() {
-            let b = evaluate(cons.car.as_ref())?;
-            if cons.cdr.as_ref() != &Expression::Atom(Atom::nil()) {
-                return Err(EvaluationError::WrongNumberOfArguments);
-            }
-            if a == b {
-                return Ok(Expression::Atom(Atom::r#true()));
-            } else {
-                return Ok(Expression::Atom(Atom::r#false()));
-            }
+// Some helpers to cut down on the boilerplate
+impl Expression {
+    fn car(&self) -> EvaluationResult {
+        if let Expression::Cons(cons) = self {
+            return Ok(cons.car.as_ref().clone());
+        } else {
+            return Err(EvaluationError::WrongNumberOfArguments);
         }
     }
-    Err(EvaluationError::WrongNumberOfArguments)
+    fn cdr(&self) -> EvaluationResult {
+        if let Expression::Cons(cons) = self {
+            return Ok(cons.cdr.as_ref().clone());
+        } else {
+            return Err(EvaluationError::WrongNumberOfArguments);
+        }
+    }
+    fn assert_empty(&self) -> Result<(), EvaluationError> {
+        if self == &Expression::Atom(Atom::nil()) {
+            return Ok(());
+        }
+        return Err(EvaluationError::WrongNumberOfArguments);
+    }
+}
+
+fn _evaluate_eq(expression: &Expression) -> EvaluationResult {
+    let a = evaluate(&expression.car()?)?;
+    let b = evaluate(&expression.cdr()?.car()?)?;
+    expression.cdr()?.cdr()?.assert_empty()?;
+
+    if a == b {
+        Ok(Expression::Atom(Atom::r#true()))
+    } else {
+        Ok(Expression::Atom(Atom::r#false()))
+    }
 }
 
 fn _evaluate(function_name: &Atom, expression: &Expression) -> EvaluationResult {
@@ -237,17 +232,10 @@ fn _evaluate(function_name: &Atom, expression: &Expression) -> EvaluationResult 
 fn evaluate(expression: &Expression) -> EvaluationResult {
     match expression {
         Expression::Atom(atom) => Ok(Expression::Atom(atom.clone())),
-        Expression::Cons(cons) => {
-            match cons.car.as_ref() {
-                Expression::Cons(_) => Err(EvaluationError::WrongNumberOfArguments),
-                // Expression::Atom(function_name) => Ok(Expression::Atom(Atom::new(&format!(
-                //     "calling {}",
-                //     function_name.string
-                // )))),
-                Expression::Atom(function_name) => _evaluate(function_name, cons.cdr.as_ref()),
-            }
-            // Ok(Expression::Atom(Atom::new("foo")))
-        }
+        Expression::Cons(cons) => match cons.car.as_ref() {
+            Expression::Cons(_) => Err(EvaluationError::WrongNumberOfArguments),
+            Expression::Atom(function_name) => _evaluate(function_name, cons.cdr.as_ref()),
+        },
     }
 }
 
