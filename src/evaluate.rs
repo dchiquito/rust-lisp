@@ -9,33 +9,44 @@ pub enum EvaluationError {
 pub type EvaluationResult = Result<Expression, EvaluationError>;
 
 // Some helpers to cut down on the boilerplate
-impl Expression {
-  fn car(&self) -> EvaluationResult {
-    if let Expression::Cons(cons) = self {
-      return Ok(cons.car.as_ref().clone());
-    } else {
-      return Err(EvaluationError::WrongNumberOfArguments);
-    }
+fn arg_length(mut expression: &Expression) -> Result<usize, EvaluationError> {
+  let mut length = 0;
+  while let Expression::Cons(cons) = expression {
+    length += 1;
+    expression = cons.cdr.as_ref();
   }
-  fn cdr(&self) -> EvaluationResult {
-    if let Expression::Cons(cons) = self {
-      return Ok(cons.cdr.as_ref().clone());
-    } else {
-      return Err(EvaluationError::WrongNumberOfArguments);
-    }
+  if expression != &atom!("nil") {
+    Err(EvaluationError::InvalidArgument)
+  } else {
+    Ok(length)
   }
-  fn assert_empty(&self) -> Result<(), EvaluationError> {
-    if self == &atom!("nil") {
-      return Ok(());
+}
+fn assert_arg_length(
+  expression: &Expression,
+  expected_length: usize,
+) -> Result<(), EvaluationError> {
+  if arg_length(expression)? != expected_length {
+    Err(EvaluationError::WrongNumberOfArguments)
+  } else {
+    Ok(())
+  }
+}
+fn arg_get(expression: &Expression, index: usize) -> EvaluationResult {
+  if let Expression::Cons(cons) = expression {
+    if index == 0 {
+      Ok(cons.car.as_ref().clone())
+    } else {
+      arg_get(cons.cdr.as_ref(), index - 1)
     }
-    return Err(EvaluationError::WrongNumberOfArguments);
+  } else {
+    Err(EvaluationError::WrongNumberOfArguments)
   }
 }
 
 fn _evaluate_eq(expression: &Expression) -> EvaluationResult {
-  let a = evaluate(&expression.car()?)?;
-  let b = evaluate(&expression.cdr()?.car()?)?;
-  expression.cdr()?.cdr()?.assert_empty()?;
+  assert_arg_length(expression, 2)?;
+  let a = evaluate(&arg_get(expression, 0)?)?;
+  let b = evaluate(&arg_get(expression, 1)?)?;
 
   if a == b {
     Ok(atom!("true"))
@@ -45,25 +56,21 @@ fn _evaluate_eq(expression: &Expression) -> EvaluationResult {
 }
 
 fn _evaluate_quote(expression: &Expression) -> EvaluationResult {
-  if let Expression::Cons(cons) = expression {
-    if cons.cdr.as_ref() == &atom!("nil") {
-      return Ok(cons.car.as_ref().clone());
-    }
-  }
-  Err(EvaluationError::WrongNumberOfArguments)
+  assert_arg_length(expression, 1)?;
+  Ok(arg_get(expression, 0)?)
 }
 
 fn _evaluate_cons(expression: &Expression) -> EvaluationResult {
-  let a = evaluate(&expression.car()?)?;
-  let b = evaluate(&expression.cdr()?.car()?)?;
-  expression.cdr()?.cdr()?.assert_empty()?;
+  assert_arg_length(expression, 2)?;
+  let a = evaluate(&arg_get(expression, 0)?)?;
+  let b = evaluate(&arg_get(expression, 1)?)?;
 
   Ok(cons!(&a, &b))
 }
 
 fn _evaluate_car(expression: &Expression) -> EvaluationResult {
-  let cons = evaluate(&expression.car()?)?;
-  expression.cdr()?.assert_empty()?;
+  assert_arg_length(expression, 1)?;
+  let cons = evaluate(&arg_get(expression, 0)?)?;
   if let Expression::Cons(cons) = cons {
     Ok(cons.car.as_ref().clone())
   } else {
@@ -72,8 +79,8 @@ fn _evaluate_car(expression: &Expression) -> EvaluationResult {
 }
 
 fn _evaluate_cdr(expression: &Expression) -> EvaluationResult {
-  let cons = evaluate(&expression.car()?)?;
-  expression.cdr()?.assert_empty()?;
+  assert_arg_length(expression, 1)?;
+  let cons = evaluate(&arg_get(expression, 0)?)?;
   if let Expression::Cons(cons) = cons {
     Ok(cons.cdr.as_ref().clone())
   } else {
