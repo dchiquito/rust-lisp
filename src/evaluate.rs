@@ -1,4 +1,5 @@
 mod car;
+mod cdr;
 mod comparison;
 mod cons;
 mod quote;
@@ -48,23 +49,13 @@ fn arg_get(expression: &Expression, index: usize) -> EvaluationResult {
   }
 }
 
-fn _evaluate_cdr(expression: &Expression) -> EvaluationResult {
-  assert_arg_length(expression, 1)?;
-  let cons = evaluate(&arg_get(expression, 0)?)?;
-  if let Expression::Cons(cons) = cons {
-    Ok(cons.cdr.as_ref().clone())
-  } else {
-    Err(EvaluationError::InvalidArgument)
-  }
-}
-
 fn _evaluate(function_name: &Atom, expression: &Expression) -> EvaluationResult {
   match &function_name.string as &str {
     "eq?" => comparison::evaluate_eq(expression),
     "quote" => quote::evaluate_quote(expression),
     "cons" => cons::evaluate_cons(expression),
     "car" => car::evaluate_car(expression),
-    "cdr" => _evaluate_cdr(expression),
+    "cdr" => cdr::evaluate_cdr(expression),
     _ => Err(EvaluationError::UnknownFunctionName),
   }
 }
@@ -76,34 +67,5 @@ pub fn evaluate(expression: &Expression) -> EvaluationResult {
       Expression::Cons(_) => Err(EvaluationError::WrongNumberOfArguments),
       Expression::Atom(function_name) => _evaluate(function_name, cons.cdr.as_ref()),
     },
-  }
-}
-
-#[cfg(test)]
-mod test {
-  use super::*;
-  use crate::parse::parse;
-
-  #[test]
-  fn test_car() {
-    assert_eq!(evaluate(&parse("(car '(1))").unwrap()), Ok(atom!("1")));
-    assert_eq!(evaluate(&parse("(car '(1 2 3))").unwrap()), Ok(atom!("1")));
-    assert_eq!(
-      evaluate(&parse("(car (cons foo bar))").unwrap()),
-      Ok(atom!("foo"))
-    );
-  }
-
-  #[test]
-  fn test_cdr() {
-    assert_eq!(evaluate(&parse("(cdr '(1))").unwrap()), Ok(atom!("nil")));
-    assert_eq!(
-      evaluate(&parse("(cdr '(1 2 3))").unwrap()),
-      Ok(list!(atom!("2"), atom!("3")))
-    );
-    assert_eq!(
-      evaluate(&parse("(cdr (cons foo bar))").unwrap()),
-      Ok(atom!("bar"))
-    );
   }
 }
