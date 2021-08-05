@@ -1,3 +1,5 @@
+use std::fmt;
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Atom {
   pub string: String,
@@ -8,6 +10,12 @@ impl Atom {
     Atom {
       string: String::from(string),
     }
+  }
+}
+
+impl fmt::Display for Atom {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    write!(f, "{}", self.string)
   }
 }
 
@@ -24,12 +32,52 @@ impl Cons {
       cdr: Box::new(cdr.clone()),
     }
   }
+  /// Format this Cons cell as if it were an interior item in a list.
+  /// When rendering the outermost Cons, fmt is called, which writes the opening '('.
+  /// The subsequent Cons need to avoid writing the '(' again, hence this alternative method.
+  fn fmt_as_inner_element(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    match self.cdr.as_ref().clone() {
+      Expression::Cons(cons) => {
+        // There are more Cons in the chain
+        // Format this car and continue recursing
+        write!(f, "{} ", self.car)?;
+        cons.fmt_as_inner_element(f)?;
+      }
+      Expression::Atom(atom) => {
+        if atom.string == "nil" {
+          // We have reached the nil terminator
+          write!(f, "{})", self.car);
+        } else {
+          // There is no nil terminator, so this isn't actually a list!
+          // Format the final atom with the special cons cell .
+          write!(f, "{} . {})", self.car, self.cdr);
+        }
+      }
+    };
+    Ok(())
+  }
+}
+
+impl fmt::Display for Cons {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    write!(f, "(");
+    self.fmt_as_inner_element(f)
+  }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Expression {
   Atom(Atom),
   Cons(Cons),
+}
+
+impl fmt::Display for Expression {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    match self {
+      Expression::Atom(atom) => write!(f, "{}", atom),
+      Expression::Cons(cons) => write!(f, "{}", cons),
+    }
+  }
 }
 
 #[macro_export]

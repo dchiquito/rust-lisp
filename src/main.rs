@@ -32,6 +32,6 @@ fn main() -> io::Result<()> {
                 continue;
             }
         };
-        println!("{:?}", evaluation);
+        println!("{}", evaluation);
     }
 }
