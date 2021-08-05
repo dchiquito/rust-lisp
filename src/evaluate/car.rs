@@ -18,13 +18,10 @@ mod test {
   #[test]
   fn test_car() {
     let scope = &mut Scope::new();
-    assert_eq!(
-      evaluate(&parse("(car '(1))").unwrap(), scope),
-      Ok(atom!("1"))
-    );
+    assert_eq!(evaluate(&parse("(car '(1))").unwrap(), scope), Ok(int!(1)));
     assert_eq!(
       evaluate(&parse("(car '(1 2 3))").unwrap(), scope),
-      Ok(atom!("1"))
+      Ok(int!(1))
     );
     assert_eq!(
       evaluate(&parse("(car (cons 'foo 'bar))").unwrap(), scope),

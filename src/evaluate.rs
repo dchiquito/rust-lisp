@@ -1,4 +1,3 @@
-mod atom;
 mod car;
 mod cdr;
 mod comparison;
@@ -54,7 +53,6 @@ fn arg_get(expression: &Expression, index: usize) -> EvaluationResult {
 
 fn _evaluate(function_name: &Atom, expression: &Expression, scope: &mut Scope) -> EvaluationResult {
   match &function_name.string as &str {
-    "atom?" => atom::evaluate_atom(expression, scope),
     "eq?" => comparison::evaluate_eq(expression, scope),
     "quote" => quote::evaluate_quote(expression, scope),
     "cons" => cons::evaluate_cons(expression, scope),
@@ -77,6 +75,8 @@ pub fn evaluate(expression: &Expression, scope: &mut Scope) -> EvaluationResult 
     Expression::Cons(cons) => match cons.car.as_ref() {
       Expression::Cons(_) => Err(EvaluationError::WrongNumberOfArguments),
       Expression::Atom(function_name) => _evaluate(function_name, cons.cdr.as_ref(), scope),
+      _ => Err(EvaluationError::UnknownFunctionName),
     },
+    Expression::Number(number) => Ok(Expression::Number(number.clone())),
   }
 }

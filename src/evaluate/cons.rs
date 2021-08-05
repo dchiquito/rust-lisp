@@ -18,11 +18,11 @@ mod test {
     let scope = &mut Scope::new();
     assert_eq!(
       evaluate(&parse("(cons 1 2)").unwrap(), scope),
-      Ok(cons!(&atom!("1"), &atom!("2")))
+      Ok(cons!(&int!(1), &int!(2)))
     );
     assert_eq!(
-      evaluate(&parse("(cons '1 '2)").unwrap(), scope),
-      Ok(cons!(&atom!("1"), &atom!("2")))
+      evaluate(&parse("(cons 1 2)").unwrap(), scope),
+      Ok(cons!(&int!(1), &int!(2)))
     );
     assert_eq!(
       evaluate(&parse("(cons (eq? 1 1) (eq? 1 2))").unwrap(), scope),

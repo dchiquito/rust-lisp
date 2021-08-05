@@ -24,7 +24,7 @@ mod test {
     );
     assert_eq!(
       evaluate(&parse("(cdr '(1 2 3))").unwrap(), scope),
-      Ok(list!(atom!("2"), atom!("3")))
+      Ok(list!(int!(2), int!(3)))
     );
     assert_eq!(
       evaluate(&parse("(cdr (cons 'foo 'bar))").unwrap(), scope),

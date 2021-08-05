@@ -18,7 +18,16 @@ fn parse_expression(string: &str) -> (ParseResult, String) {
         (Err(err), remainder) => (Err(err), remainder),
         (Ok(quoted_value), remainder) => (Ok(list!(atom!("quote"), quoted_value)), remainder),
       },
-      token => (Ok(atom!(token)), remainder),
+      token => {
+        fn is_digit(c: char) -> bool {
+          c.is_digit(10)
+        }
+        if token.chars().all(is_digit) {
+          (Ok(int!(token.parse().unwrap())), remainder)
+        } else {
+          (Ok(atom!(token)), remainder)
+        }
+      }
     },
   }
 }

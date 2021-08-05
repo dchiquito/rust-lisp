@@ -24,10 +24,10 @@ mod test {
     let scope = &mut Scope::new();
     assert_eq!(
       evaluate(&parse("(define foo 1)").unwrap(), scope),
-      Ok(atom!("1"))
+      Ok(int!(1))
     );
-    assert_eq!(scope.lookup(&Atom::new("foo")), Ok(atom!("1")));
-    assert_eq!(evaluate(&parse("foo").unwrap(), scope), Ok(atom!("1")))
+    assert_eq!(scope.lookup(&Atom::new("foo")), Ok(int!(1)));
+    assert_eq!(evaluate(&parse("foo").unwrap(), scope), Ok(int!(1)))
   }
   #[test]
   fn test_evaluate_define_non_symbols() {

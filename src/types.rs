@@ -18,7 +18,6 @@ impl Atom {
     self.string == "true" || self.string == "false"
   }
   pub fn is_number(&self) -> bool {
-    // TODO a more elegant number system
     fn is_digit(c: char) -> bool {
       c.is_digit(10)
     }
@@ -70,6 +69,11 @@ impl Cons {
           write!(f, "{} . {})", self.car, self.cdr)?;
         }
       }
+      _ => {
+        // There is no nil terminator, so this isn't actually a list!
+        // Format the final atom with the special cons cell .
+        write!(f, "{} . {})", self.car, self.cdr)?;
+      }
     };
     Ok(())
   }
@@ -83,9 +87,22 @@ impl fmt::Display for Cons {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+pub enum Number {
+  Integer(i32),
+}
+
+impl fmt::Display for Number {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    match self {
+      Number::Integer(number) => write!(f, "{}", number),
+    }
+  }
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Expression {
   Atom(Atom),
   Cons(Cons),
+  Number(Number),
 }
 
 impl fmt::Display for Expression {
@@ -93,6 +110,7 @@ impl fmt::Display for Expression {
     match self {
       Expression::Atom(atom) => write!(f, "{}", atom),
       Expression::Cons(cons) => write!(f, "{}", cons),
+      Expression::Number(number) => write!(f, "{}", number),
     }
   }
 }
@@ -122,4 +140,11 @@ macro_rules! list {
     ($car:expr, $($cdr:expr),*) => {
         cons!(&$car, &list!($($cdr),*))
     };
+}
+
+#[macro_export]
+macro_rules! int {
+  ($number:expr) => {
+    Expression::Number(Number::Integer($number))
+  };
 }
