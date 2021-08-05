@@ -63,11 +63,11 @@ impl Cons {
       Expression::Atom(atom) => {
         if atom.string == "nil" {
           // We have reached the nil terminator
-          write!(f, "{})", self.car);
+          write!(f, "{})", self.car)?;
         } else {
           // There is no nil terminator, so this isn't actually a list!
           // Format the final atom with the special cons cell .
-          write!(f, "{} . {})", self.car, self.cdr);
+          write!(f, "{} . {})", self.car, self.cdr)?;
         }
       }
     };
@@ -77,7 +77,7 @@ impl Cons {
 
 impl fmt::Display for Cons {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    write!(f, "(");
+    write!(f, "(")?;
     self.fmt_as_inner_element(f)
   }
 }

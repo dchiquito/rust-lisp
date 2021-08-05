@@ -8,7 +8,7 @@ pub use crate::evaluate::evaluate;
 pub use crate::parse::parse;
 pub use crate::scope::Scope;
 pub use crate::types::*;
-use std::io::{self, Read, Write};
+use std::io::{self, Write};
 
 fn main() -> io::Result<()> {
     let mut scope = Scope::new();

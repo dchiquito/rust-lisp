@@ -1,6 +1,6 @@
 use super::*;
 
-pub fn evaluate_quote(expression: &Expression, scope: &mut Scope) -> EvaluationResult {
+pub fn evaluate_quote(expression: &Expression, _scope: &mut Scope) -> EvaluationResult {
   assert_arg_length(expression, 1)?;
   Ok(arg_get(expression, 0)?)
 }
