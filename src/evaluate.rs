@@ -1,12 +1,12 @@
 use crate::*;
 
 #[derive(Debug, Eq, PartialEq)]
-enum EvaluationError {
+pub enum EvaluationError {
   UnknownFunctionName,
   WrongNumberOfArguments,
   InvalidArgument,
 }
-type EvaluationResult = Result<Expression, EvaluationError>;
+pub type EvaluationResult = Result<Expression, EvaluationError>;
 
 // Some helpers to cut down on the boilerplate
 impl Expression {
@@ -92,7 +92,7 @@ fn _evaluate(function_name: &Atom, expression: &Expression) -> EvaluationResult 
   }
 }
 
-fn evaluate(expression: &Expression) -> EvaluationResult {
+pub fn evaluate(expression: &Expression) -> EvaluationResult {
   match expression {
     Expression::Atom(atom) => Ok(Expression::Atom(atom.clone())),
     Expression::Cons(cons) => match cons.car.as_ref() {
@@ -105,6 +105,7 @@ fn evaluate(expression: &Expression) -> EvaluationResult {
 #[cfg(test)]
 mod test {
   use super::*;
+  use crate::parse::parse;
 
   #[test]
   fn test_evaluate_eq() {
