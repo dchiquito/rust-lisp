@@ -1,6 +1,6 @@
 use super::*;
 
-pub fn evaluate_quote(expression: &Expression) -> EvaluationResult {
+pub fn evaluate_quote(expression: &Expression, scope: &mut Scope) -> EvaluationResult {
   assert_arg_length(expression, 1)?;
   Ok(arg_get(expression, 0)?)
 }
@@ -12,18 +12,22 @@ mod test {
 
   #[test]
   fn test_quote() {
-    assert_eq!(evaluate(&parse("'foo").unwrap()), Ok(atom!("foo"),));
-    assert_eq!(evaluate(&parse("'(foo)").unwrap()), Ok(list!(atom!("foo"))));
+    let scope = &mut Scope::new();
+    assert_eq!(evaluate(&parse("'foo").unwrap(), scope), Ok(atom!("foo"),));
     assert_eq!(
-      evaluate(&parse("(eq? (eq? 1 1) (eq? 1 1))").unwrap()),
+      evaluate(&parse("'(foo)").unwrap(), scope),
+      Ok(list!(atom!("foo")))
+    );
+    assert_eq!(
+      evaluate(&parse("(eq? (eq? 1 1) (eq? 1 1))").unwrap(), scope),
       Ok(atom!("true"))
     );
     assert_eq!(
-      evaluate(&parse("(eq? '(eq? 1 1) (eq? 1 1))").unwrap()),
+      evaluate(&parse("(eq? '(eq? 1 1) (eq? 1 1))").unwrap(), scope),
       Ok(atom!("false"))
     );
     assert_eq!(
-      evaluate(&parse("(eq? '(a b c) (quote (a b c)))").unwrap()),
+      evaluate(&parse("(eq? '(a b c) (quote (a b c)))").unwrap(), scope),
       Ok(atom!("true"))
     );
   }

@@ -1,14 +1,17 @@
 mod evaluate;
 mod parse;
+mod scope;
 mod token;
 mod types;
 
 pub use crate::evaluate::evaluate;
 pub use crate::parse::parse;
+pub use crate::scope::Scope;
 pub use crate::types::*;
 use std::io::{self, Read, Write};
 
 fn main() -> io::Result<()> {
+    let mut scope = Scope::new();
     loop {
         let mut input = String::new();
         print!("> ");
@@ -25,7 +28,7 @@ fn main() -> io::Result<()> {
             }
         };
 
-        let evaluation = match evaluate(&input_expression) {
+        let evaluation = match evaluate(&input_expression, &mut scope) {
             Ok(expression) => expression,
             Err(err) => {
                 println!("Error evaluating input: {:?}", err);

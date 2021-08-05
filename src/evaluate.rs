@@ -3,6 +3,7 @@ mod car;
 mod cdr;
 mod comparison;
 mod cons;
+mod define;
 mod quote;
 
 use crate::*;
@@ -12,6 +13,7 @@ pub enum EvaluationError {
   UnknownFunctionName,
   WrongNumberOfArguments,
   InvalidArgument,
+  UndefinedSymbol,
 }
 pub type EvaluationResult = Result<Expression, EvaluationError>;
 
@@ -50,24 +52,25 @@ fn arg_get(expression: &Expression, index: usize) -> EvaluationResult {
   }
 }
 
-fn _evaluate(function_name: &Atom, expression: &Expression) -> EvaluationResult {
+fn _evaluate(function_name: &Atom, expression: &Expression, scope: &mut Scope) -> EvaluationResult {
   match &function_name.string as &str {
-    "atom?" => atom::evaluate_atom(expression),
-    "eq?" => comparison::evaluate_eq(expression),
-    "quote" => quote::evaluate_quote(expression),
-    "cons" => cons::evaluate_cons(expression),
-    "car" => car::evaluate_car(expression),
-    "cdr" => cdr::evaluate_cdr(expression),
+    "atom?" => atom::evaluate_atom(expression, scope),
+    "eq?" => comparison::evaluate_eq(expression, scope),
+    "quote" => quote::evaluate_quote(expression, scope),
+    "cons" => cons::evaluate_cons(expression, scope),
+    "car" => car::evaluate_car(expression, scope),
+    "cdr" => cdr::evaluate_cdr(expression, scope),
+    "define" => define::evaluate_define(expression, scope),
     _ => Err(EvaluationError::UnknownFunctionName),
   }
 }
 
-pub fn evaluate(expression: &Expression) -> EvaluationResult {
+pub fn evaluate(expression: &Expression, scope: &mut Scope) -> EvaluationResult {
   match expression {
     Expression::Atom(atom) => Ok(Expression::Atom(atom.clone())),
     Expression::Cons(cons) => match cons.car.as_ref() {
       Expression::Cons(_) => Err(EvaluationError::WrongNumberOfArguments),
-      Expression::Atom(function_name) => _evaluate(function_name, cons.cdr.as_ref()),
+      Expression::Atom(function_name) => _evaluate(function_name, cons.cdr.as_ref(), scope),
     },
   }
 }
