@@ -1,3 +1,4 @@
+mod atom;
 mod car;
 mod cdr;
 mod comparison;
@@ -51,6 +52,7 @@ fn arg_get(expression: &Expression, index: usize) -> EvaluationResult {
 
 fn _evaluate(function_name: &Atom, expression: &Expression) -> EvaluationResult {
   match &function_name.string as &str {
+    "atom?" => atom::evaluate_atom(expression),
     "eq?" => comparison::evaluate_eq(expression),
     "quote" => quote::evaluate_quote(expression),
     "cons" => cons::evaluate_cons(expression),
