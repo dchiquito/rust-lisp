@@ -27,7 +27,7 @@ mod test {
       Ok(atom!("1"))
     );
     assert_eq!(
-      evaluate(&parse("(car (cons foo bar))").unwrap(), scope),
+      evaluate(&parse("(car (cons 'foo 'bar))").unwrap(), scope),
       Ok(atom!("foo"))
     );
   }

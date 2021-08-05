@@ -13,7 +13,7 @@ mod test {
   #[test]
   fn test_quote() {
     let scope = &mut Scope::new();
-    assert_eq!(evaluate(&parse("'foo").unwrap(), scope), Ok(atom!("foo"),));
+    assert_eq!(evaluate(&parse("'foo").unwrap(), scope), Ok(atom!("foo")));
     assert_eq!(
       evaluate(&parse("'(foo)").unwrap(), scope),
       Ok(list!(atom!("foo")))
@@ -28,6 +28,13 @@ mod test {
     );
     assert_eq!(
       evaluate(&parse("(eq? '(a b c) (quote (a b c)))").unwrap(), scope),
+      Ok(atom!("true"))
+    );
+    assert_eq!(
+      evaluate(
+        &parse("(eq? '((a b) (c d)) (quote ((a b) (c d)) ))").unwrap(),
+        scope
+      ),
       Ok(atom!("true"))
     );
   }

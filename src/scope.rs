@@ -18,7 +18,7 @@ impl Scope {
   pub fn lookup(&self, symbol: &Atom) -> EvaluationResult {
     match self.mapping.get(symbol) {
       Some(expression) => Ok(expression.clone()),
-      None => Err(EvaluationError::UnknownFunctionName),
+      None => Err(EvaluationError::UndefinedSymbol),
     }
   }
 }

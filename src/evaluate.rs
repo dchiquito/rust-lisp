@@ -67,7 +67,13 @@ fn _evaluate(function_name: &Atom, expression: &Expression, scope: &mut Scope) -
 
 pub fn evaluate(expression: &Expression, scope: &mut Scope) -> EvaluationResult {
   match expression {
-    Expression::Atom(atom) => Ok(Expression::Atom(atom.clone())),
+    Expression::Atom(atom) => {
+      if atom.is_symbol() {
+        scope.lookup(atom)
+      } else {
+        Ok(Expression::Atom(atom.clone()))
+      }
+    }
     Expression::Cons(cons) => match cons.car.as_ref() {
       Expression::Cons(_) => Err(EvaluationError::WrongNumberOfArguments),
       Expression::Atom(function_name) => _evaluate(function_name, cons.cdr.as_ref(), scope),

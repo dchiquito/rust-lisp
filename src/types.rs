@@ -11,6 +11,23 @@ impl Atom {
       string: String::from(string),
     }
   }
+  pub fn is_nil(&self) -> bool {
+    self.string == "nil"
+  }
+  pub fn is_bool(&self) -> bool {
+    self.string == "true" || self.string == "false"
+  }
+  pub fn is_number(&self) -> bool {
+    // TODO a more elegant number system
+    fn is_digit(c: char) -> bool {
+      c.is_digit(10)
+    }
+    self.string.chars().all(is_digit)
+  }
+  pub fn is_symbol(&self) -> bool {
+    // it's not a symbol if it is a primitive type
+    !self.is_nil() && !self.is_bool() && !self.is_number()
+  }
 }
 
 impl fmt::Display for Atom {

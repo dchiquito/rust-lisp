@@ -25,11 +25,11 @@ mod test {
       Ok(atom!("true"))
     );
     assert_eq!(
-      evaluate(&parse("(eq? foo foo)").unwrap(), scope),
+      evaluate(&parse("(eq? 'foo 'foo)").unwrap(), scope),
       Ok(atom!("true"))
     );
     assert_eq!(
-      evaluate(&parse("(eq? foo bar)").unwrap(), scope),
+      evaluate(&parse("(eq? 'foo 'bar)").unwrap(), scope),
       Ok(atom!("false"))
     );
     assert_eq!(

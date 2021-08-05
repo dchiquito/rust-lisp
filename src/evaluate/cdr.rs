@@ -27,7 +27,7 @@ mod test {
       Ok(list!(atom!("2"), atom!("3")))
     );
     assert_eq!(
-      evaluate(&parse("(cdr (cons foo bar))").unwrap(), scope),
+      evaluate(&parse("(cdr (cons 'foo 'bar))").unwrap(), scope),
       Ok(atom!("bar"))
     );
   }

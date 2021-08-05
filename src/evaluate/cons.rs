@@ -29,11 +29,11 @@ mod test {
       Ok(cons!(&atom!("true"), &atom!("false")))
     );
     assert_eq!(
-      evaluate(&parse("(cons foo nil)").unwrap(), scope),
+      evaluate(&parse("(cons 'foo nil)").unwrap(), scope),
       Ok(list!(atom!("foo")))
     );
     assert_eq!(
-      evaluate(&parse("(eq? (cons foo nil) '(foo))").unwrap(), scope),
+      evaluate(&parse("(eq? (cons 'foo nil) '(foo))").unwrap(), scope),
       Ok(atom!("true"))
     );
   }

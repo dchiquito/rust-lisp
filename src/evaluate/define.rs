@@ -26,5 +26,6 @@ mod test {
       Ok(atom!("1"))
     );
     assert_eq!(scope.lookup(&Atom::new("foo")), Ok(atom!("1")));
+    assert_eq!(evaluate(&parse("foo").unwrap(), scope), Ok(atom!("1")))
   }
 }
