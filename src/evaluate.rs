@@ -1,4 +1,5 @@
 mod comparison;
+mod cons;
 mod quote;
 
 use crate::*;
@@ -46,14 +47,6 @@ fn arg_get(expression: &Expression, index: usize) -> EvaluationResult {
   }
 }
 
-fn _evaluate_cons(expression: &Expression) -> EvaluationResult {
-  assert_arg_length(expression, 2)?;
-  let a = evaluate(&arg_get(expression, 0)?)?;
-  let b = evaluate(&arg_get(expression, 1)?)?;
-
-  Ok(cons!(&a, &b))
-}
-
 fn _evaluate_car(expression: &Expression) -> EvaluationResult {
   assert_arg_length(expression, 1)?;
   let cons = evaluate(&arg_get(expression, 0)?)?;
@@ -78,7 +71,7 @@ fn _evaluate(function_name: &Atom, expression: &Expression) -> EvaluationResult 
   match &function_name.string as &str {
     "eq?" => comparison::evaluate_eq(expression),
     "quote" => quote::evaluate_quote(expression),
-    "cons" => _evaluate_cons(expression),
+    "cons" => cons::evaluate_cons(expression),
     "car" => _evaluate_car(expression),
     "cdr" => _evaluate_cdr(expression),
     _ => Err(EvaluationError::UnknownFunctionName),
@@ -99,30 +92,6 @@ pub fn evaluate(expression: &Expression) -> EvaluationResult {
 mod test {
   use super::*;
   use crate::parse::parse;
-
-  #[test]
-  fn test_cons() {
-    assert_eq!(
-      evaluate(&parse("(cons 1 2)").unwrap()),
-      Ok(cons!(&atom!("1"), &atom!("2")))
-    );
-    assert_eq!(
-      evaluate(&parse("(cons '1 '2)").unwrap()),
-      Ok(cons!(&atom!("1"), &atom!("2")))
-    );
-    assert_eq!(
-      evaluate(&parse("(cons (eq? 1 1) (eq? 1 2))").unwrap()),
-      Ok(cons!(&atom!("true"), &atom!("false")))
-    );
-    assert_eq!(
-      evaluate(&parse("(cons foo nil)").unwrap()),
-      Ok(list!(atom!("foo")))
-    );
-    assert_eq!(
-      evaluate(&parse("(eq? (cons foo nil) '(foo))").unwrap()),
-      Ok(atom!("true"))
-    );
-  }
 
   #[test]
   fn test_car() {
