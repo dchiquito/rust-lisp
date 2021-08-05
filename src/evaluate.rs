@@ -1,3 +1,5 @@
+mod comparison;
+
 use crate::*;
 
 #[derive(Debug, Eq, PartialEq)]
@@ -43,18 +45,6 @@ fn arg_get(expression: &Expression, index: usize) -> EvaluationResult {
   }
 }
 
-fn _evaluate_eq(expression: &Expression) -> EvaluationResult {
-  assert_arg_length(expression, 2)?;
-  let a = evaluate(&arg_get(expression, 0)?)?;
-  let b = evaluate(&arg_get(expression, 1)?)?;
-
-  if a == b {
-    Ok(atom!("true"))
-  } else {
-    Ok(atom!("false"))
-  }
-}
-
 fn _evaluate_quote(expression: &Expression) -> EvaluationResult {
   assert_arg_length(expression, 1)?;
   Ok(arg_get(expression, 0)?)
@@ -90,7 +80,7 @@ fn _evaluate_cdr(expression: &Expression) -> EvaluationResult {
 
 fn _evaluate(function_name: &Atom, expression: &Expression) -> EvaluationResult {
   match &function_name.string as &str {
-    "eq?" => _evaluate_eq(expression),
+    "eq?" => comparison::evaluate_eq(expression),
     "quote" => _evaluate_quote(expression),
     "cons" => _evaluate_cons(expression),
     "car" => _evaluate_car(expression),
@@ -113,23 +103,6 @@ pub fn evaluate(expression: &Expression) -> EvaluationResult {
 mod test {
   use super::*;
   use crate::parse::parse;
-
-  #[test]
-  fn test_evaluate_eq() {
-    assert_eq!(evaluate(&parse("(eq? 1 1)").unwrap()), Ok(atom!("true")));
-    assert_eq!(
-      evaluate(&parse("(eq? foo foo)").unwrap()),
-      Ok(atom!("true"))
-    );
-    assert_eq!(
-      evaluate(&parse("(eq? foo bar)").unwrap()),
-      Ok(atom!("false"))
-    );
-    assert_eq!(
-      evaluate(&parse("(eq? (eq? 1 1) true)").unwrap()),
-      Ok(atom!("true"))
-    );
-  }
 
   #[test]
   fn test_quote() {
