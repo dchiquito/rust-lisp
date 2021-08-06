@@ -1,34 +1,5 @@
 use std::fmt;
 
-#[derive(Clone, Debug, Eq, PartialEq, Hash)]
-pub struct Atom {
-  pub string: String,
-}
-
-impl Atom {
-  pub fn new(string: &str) -> Atom {
-    Atom {
-      string: String::from(string),
-    }
-  }
-  pub fn is_nil(&self) -> bool {
-    self.string == "nil"
-  }
-  pub fn is_bool(&self) -> bool {
-    self.string == "true" || self.string == "false"
-  }
-  pub fn is_symbol(&self) -> bool {
-    // it's not a symbol if it is a primitive type
-    !self.is_nil() && !self.is_bool()
-  }
-}
-
-impl fmt::Display for Atom {
-  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    write!(f, "{}", self.string)
-  }
-}
-
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Cons {
   pub car: Box<Expression>,
@@ -53,19 +24,19 @@ impl Cons {
         write!(f, "{} ", self.car)?;
         cons.fmt_as_inner_element(f)?;
       }
-      Expression::Atom(atom) => {
-        if atom.string == "nil" {
+      Expression::Symbol(symbol) => {
+        if symbol == "nil" {
           // We have reached the nil terminator
           write!(f, "{})", self.car)?;
         } else {
           // There is no nil terminator, so this isn't actually a list!
-          // Format the final atom with the special cons cell .
+          // Format the final symbol with the special cons cell .
           write!(f, "{} . {})", self.car, self.cdr)?;
         }
       }
       _ => {
         // There is no nil terminator, so this isn't actually a list!
-        // Format the final atom with the special cons cell .
+        // Format the final symbol with the special cons cell .
         write!(f, "{} . {})", self.car, self.cdr)?;
       }
     };
@@ -94,7 +65,7 @@ impl fmt::Display for Number {
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Expression {
-  Atom(Atom),
+  Symbol(String),
   Cons(Cons),
   Number(Number),
   Boolean(bool),
@@ -104,7 +75,7 @@ pub enum Expression {
 impl fmt::Display for Expression {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     match self {
-      Expression::Atom(atom) => write!(f, "{}", atom),
+      Expression::Symbol(symbol) => write!(f, "{}", symbol),
       Expression::Cons(cons) => write!(f, "{}", cons),
       Expression::Number(number) => write!(f, "{}", number),
       Expression::Boolean(boolean) => {
@@ -120,9 +91,9 @@ impl fmt::Display for Expression {
 }
 
 #[macro_export]
-macro_rules! atom {
-  ($atom:expr) => {
-    Expression::Atom(Atom::new($atom))
+macro_rules! symbol {
+  ($symbol:expr) => {
+    Expression::Symbol(String::from($symbol))
   };
 }
 

@@ -53,8 +53,8 @@ fn arg_get(expression: &Expression, index: usize) -> EvaluationResult {
   }
 }
 
-fn _evaluate(function_name: &Atom, expression: &Expression, scope: &mut Scope) -> EvaluationResult {
-  match &function_name.string as &str {
+fn _evaluate(function_name: &str, expression: &Expression, scope: &mut Scope) -> EvaluationResult {
+  match function_name {
     "+" => arithmetic::evaluate_add(expression, scope),
     "*" => arithmetic::evaluate_multiply(expression, scope),
     "-" => arithmetic::evaluate_subtract(expression, scope),
@@ -71,16 +71,10 @@ fn _evaluate(function_name: &Atom, expression: &Expression, scope: &mut Scope) -
 
 pub fn evaluate(expression: &Expression, scope: &mut Scope) -> EvaluationResult {
   match expression {
-    Expression::Atom(atom) => {
-      if atom.is_symbol() {
-        scope.lookup(atom)
-      } else {
-        Ok(Expression::Atom(atom.clone()))
-      }
-    }
+    Expression::Symbol(symbol) => scope.lookup(symbol),
     Expression::Cons(cons) => match cons.car.as_ref() {
       Expression::Cons(_) => Err(EvaluationError::WrongNumberOfArguments),
-      Expression::Atom(function_name) => _evaluate(function_name, cons.cdr.as_ref(), scope),
+      Expression::Symbol(function_name) => _evaluate(function_name, cons.cdr.as_ref(), scope),
       _ => Err(EvaluationError::UnknownFunctionName),
     },
     _ => Ok(expression.clone()),

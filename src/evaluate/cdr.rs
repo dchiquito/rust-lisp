@@ -25,7 +25,7 @@ mod test {
     );
     assert_eq!(
       evaluate(&parse("(cdr (cons 'foo 'bar))").unwrap(), scope),
-      Ok(atom!("bar"))
+      Ok(symbol!("bar"))
     );
   }
 }

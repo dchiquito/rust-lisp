@@ -30,7 +30,7 @@ mod test {
     );
     assert_eq!(
       evaluate(&parse("(cons 'foo '())").unwrap(), scope),
-      Ok(list!(atom!("foo")))
+      Ok(list!(symbol!("foo")))
     );
     assert_eq!(
       evaluate(&parse("(eq? (cons 'foo '()) '(foo))").unwrap(), scope),

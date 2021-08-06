@@ -13,10 +13,10 @@ mod test {
   #[test]
   fn test_quote() {
     let scope = &mut Scope::new();
-    assert_eq!(evaluate(&parse("'foo").unwrap(), scope), Ok(atom!("foo")));
+    assert_eq!(evaluate(&parse("'foo").unwrap(), scope), Ok(symbol!("foo")));
     assert_eq!(
       evaluate(&parse("'(foo)").unwrap(), scope),
-      Ok(list!(atom!("foo")))
+      Ok(list!(symbol!("foo")))
     );
     assert_eq!(
       evaluate(&parse("(eq? (eq? 1 1) (eq? 1 1))").unwrap(), scope),

@@ -25,7 +25,7 @@ mod test {
     );
     assert_eq!(
       evaluate(&parse("(car (cons 'foo 'bar))").unwrap(), scope),
-      Ok(atom!("foo"))
+      Ok(symbol!("foo"))
     );
   }
 }

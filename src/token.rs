@@ -11,16 +11,16 @@ pub fn pop_token(string: &str) -> (Option<String>, String) {
   match first_char {
     '(' | ')' | '\'' => (Some(String::from(first_char)), String::from(remainder)),
     _ => {
-      let mut atom = String::from(first_char);
+      let mut symbol = String::from(first_char);
       while remainder.len() > 0 {
         let next_char = remainder.chars().next().unwrap();
         if (next_char == '(') | (next_char == ')') | next_char.is_whitespace() {
-          return (Some(atom), String::from(remainder));
+          return (Some(symbol), String::from(remainder));
         }
-        atom.push(next_char);
+        symbol.push(next_char);
         remainder = remainder.get(1..).unwrap()
       }
-      (Some(atom), String::from(remainder))
+      (Some(symbol), String::from(remainder))
     }
   }
 }

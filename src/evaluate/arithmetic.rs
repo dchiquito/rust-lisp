@@ -121,7 +121,7 @@ mod test {
     );
     // Test an improper list
     assert_eq!(
-      evaluate(&cons!(&atom!("+"), &cons!(&int!(1), &int!(2))), scope),
+      evaluate(&cons!(&symbol!("+"), &cons!(&int!(1), &int!(2))), scope),
       Err(EvaluationError::InvalidArgument)
     );
   }
@@ -148,7 +148,7 @@ mod test {
     );
     // Test an improper list
     assert_eq!(
-      evaluate(&cons!(&atom!("*"), &cons!(&int!(1), &int!(2))), scope),
+      evaluate(&cons!(&symbol!("*"), &cons!(&int!(1), &int!(2))), scope),
       Err(EvaluationError::InvalidArgument)
     );
   }
@@ -175,7 +175,7 @@ mod test {
     );
     // Test an improper list
     assert_eq!(
-      evaluate(&cons!(&atom!("-"), &cons!(&int!(1), &int!(2))), scope),
+      evaluate(&cons!(&symbol!("-"), &cons!(&int!(1), &int!(2))), scope),
       Err(EvaluationError::InvalidArgument)
     );
   }
@@ -213,7 +213,7 @@ mod test {
     );
     // Test an improper list
     assert_eq!(
-      evaluate(&cons!(&atom!("-"), &cons!(&int!(1), &int!(2))), scope),
+      evaluate(&cons!(&symbol!("-"), &cons!(&int!(1), &int!(2))), scope),
       Err(EvaluationError::InvalidArgument)
     );
   }

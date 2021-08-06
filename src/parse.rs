@@ -16,7 +16,7 @@ fn parse_expression(string: &str) -> (ParseResult, String) {
       ")" => (Err(ParseError::UnmatchedClosingParen), remainder),
       "'" => match parse_expression(&remainder) {
         (Err(err), remainder) => (Err(err), remainder),
-        (Ok(quoted_value), remainder) => (Ok(list!(atom!("quote"), quoted_value)), remainder),
+        (Ok(quoted_value), remainder) => (Ok(list!(symbol!("quote"), quoted_value)), remainder),
       },
       token => {
         fn is_digit(c: char) -> bool {
@@ -36,7 +36,7 @@ fn parse_expression(string: &str) -> (ParseResult, String) {
         } else if token == "#f" || token == "#false" {
           (Ok(boolean!(false)), remainder)
         } else {
-          (Ok(atom!(token)), remainder)
+          (Ok(symbol!(token)), remainder)
         }
       }
     },
@@ -47,7 +47,7 @@ fn parse_expression(string: &str) -> (ParseResult, String) {
 fn parse_list(string: &str) -> (ParseResult, String) {
   match parse_expression(string) {
     // An UnmatchedClosingParen actually means we encountered the end of the list
-    // Lists are terminated with a nil atom, so just return that
+    // Lists are terminated with a nil symbol, so just return that
     (Err(ParseError::UnmatchedClosingParen), remainder) => (Ok(null!()), remainder),
     (Ok(car), remainder) => {
       let (cdr, remainder) = parse_list(&remainder);
@@ -73,28 +73,28 @@ mod test {
 
   #[test]
   fn test_parse() {
-    assert_eq!(parse("aaa"), Ok(atom!("aaa")));
+    assert_eq!(parse("aaa"), Ok(symbol!("aaa")));
     assert_eq!(parse("()"), Ok(null!()));
-    assert_eq!(parse("(aaa)"), Ok(list!(atom!("aaa"))));
+    assert_eq!(parse("(aaa)"), Ok(list!(symbol!("aaa"))));
     assert_eq!(
       parse("  (  aaa   bbb  )  "),
-      Ok(list!(atom!("aaa"), atom!("bbb")))
+      Ok(list!(symbol!("aaa"), symbol!("bbb")))
     );
     assert_eq!(parse("1"), Ok(int!(1)));
     assert_eq!(parse("99999"), Ok(int!(99999)));
     assert_eq!(parse("0"), Ok(int!(0)));
     assert_eq!(parse("-1"), Ok(int!(-1)));
-    assert_eq!(parse("-"), Ok(atom!("-")));
+    assert_eq!(parse("-"), Ok(symbol!("-")));
     assert_eq!(parse("#t"), Ok(boolean!(true)));
     assert_eq!(parse("#true"), Ok(boolean!(true)));
     assert_eq!(parse("#f"), Ok(boolean!(false)));
     assert_eq!(parse("#false"), Ok(boolean!(false)));
     assert_eq!(parse("("), Err(ParseError::UnexpectedEOF));
     assert_eq!(parse(")"), Err(ParseError::UnmatchedClosingParen));
-    assert_eq!(parse("'aaa"), Ok(list!(atom!("quote"), atom!("aaa"))));
+    assert_eq!(parse("'aaa"), Ok(list!(symbol!("quote"), symbol!("aaa"))));
     assert_eq!(
       parse("'(aaa)"),
-      Ok(list!(atom!("quote"), list!(atom!("aaa"))))
+      Ok(list!(symbol!("quote"), list!(symbol!("aaa"))))
     );
   }
 }
