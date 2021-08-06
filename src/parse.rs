@@ -31,6 +31,10 @@ fn parse_expression(string: &str) -> (ParseResult, String) {
         {
           // negative numbers are also allowed
           (Ok(int!(token.parse().unwrap())), remainder)
+        } else if token == "#t" || token == "#true" {
+          (Ok(boolean!(true)), remainder)
+        } else if token == "#f" || token == "#false" {
+          (Ok(boolean!(false)), remainder)
         } else {
           (Ok(atom!(token)), remainder)
         }
@@ -81,6 +85,10 @@ mod test {
     assert_eq!(parse("0"), Ok(int!(0)));
     assert_eq!(parse("-1"), Ok(int!(-1)));
     assert_eq!(parse("-"), Ok(atom!("-")));
+    assert_eq!(parse("#t"), Ok(boolean!(true)));
+    assert_eq!(parse("#true"), Ok(boolean!(true)));
+    assert_eq!(parse("#f"), Ok(boolean!(false)));
+    assert_eq!(parse("#false"), Ok(boolean!(false)));
     assert_eq!(parse("("), Err(ParseError::UnexpectedEOF));
     assert_eq!(parse(")"), Err(ParseError::UnmatchedClosingParen));
     assert_eq!(parse("'aaa"), Ok(list!(atom!("quote"), atom!("aaa"))));

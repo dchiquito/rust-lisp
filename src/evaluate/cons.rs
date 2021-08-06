@@ -26,7 +26,7 @@ mod test {
     );
     assert_eq!(
       evaluate(&parse("(cons (eq? 1 1) (eq? 1 2))").unwrap(), scope),
-      Ok(cons!(&atom!("true"), &atom!("false")))
+      Ok(cons!(&boolean!(true), &boolean!(false)))
     );
     assert_eq!(
       evaluate(&parse("(cons 'foo nil)").unwrap(), scope),
@@ -34,7 +34,7 @@ mod test {
     );
     assert_eq!(
       evaluate(&parse("(eq? (cons 'foo nil) '(foo))").unwrap(), scope),
-      Ok(atom!("true"))
+      Ok(boolean!(true))
     );
   }
 }

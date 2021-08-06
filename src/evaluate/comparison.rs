@@ -6,9 +6,9 @@ pub fn evaluate_eq(expression: &Expression, scope: &mut Scope) -> EvaluationResu
   let b = evaluate(&arg_get(expression, 1)?, scope)?;
 
   if a == b {
-    Ok(atom!("true"))
+    Ok(boolean!(true))
   } else {
-    Ok(atom!("false"))
+    Ok(boolean!(false))
   }
 }
 
@@ -22,19 +22,23 @@ mod test {
     let scope = &mut Scope::new();
     assert_eq!(
       evaluate(&parse("(eq? 1 1)").unwrap(), scope),
-      Ok(atom!("true"))
+      Ok(boolean!(true))
     );
     assert_eq!(
       evaluate(&parse("(eq? 'foo 'foo)").unwrap(), scope),
-      Ok(atom!("true"))
+      Ok(boolean!(true))
     );
     assert_eq!(
       evaluate(&parse("(eq? 'foo 'bar)").unwrap(), scope),
-      Ok(atom!("false"))
+      Ok(boolean!(false))
     );
     assert_eq!(
-      evaluate(&parse("(eq? (eq? 1 1) true)").unwrap(), scope),
-      Ok(atom!("true"))
+      evaluate(&parse("(eq? (eq? 1 1) #t)").unwrap(), scope),
+      Ok(boolean!(true))
+    );
+    assert_eq!(
+      evaluate(&parse("(eq? (eq? 1 1) #true)").unwrap(), scope),
+      Ok(boolean!(true))
     );
   }
 }

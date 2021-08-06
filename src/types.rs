@@ -97,6 +97,7 @@ pub enum Expression {
   Atom(Atom),
   Cons(Cons),
   Number(Number),
+  Boolean(bool),
 }
 
 impl fmt::Display for Expression {
@@ -105,6 +106,13 @@ impl fmt::Display for Expression {
       Expression::Atom(atom) => write!(f, "{}", atom),
       Expression::Cons(cons) => write!(f, "{}", cons),
       Expression::Number(number) => write!(f, "{}", number),
+      Expression::Boolean(boolean) => {
+        if *boolean {
+          write!(f, "#t")
+        } else {
+          write!(f, "#f")
+        }
+      }
     }
   }
 }
@@ -140,5 +148,12 @@ macro_rules! list {
 macro_rules! int {
   ($number:expr) => {
     Expression::Number(Number::Integer($number))
+  };
+}
+
+#[macro_export]
+macro_rules! boolean {
+  ($boolean:expr) => {
+    Expression::Boolean($boolean)
   };
 }

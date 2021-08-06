@@ -83,6 +83,6 @@ pub fn evaluate(expression: &Expression, scope: &mut Scope) -> EvaluationResult 
       Expression::Atom(function_name) => _evaluate(function_name, cons.cdr.as_ref(), scope),
       _ => Err(EvaluationError::UnknownFunctionName),
     },
-    Expression::Number(number) => Ok(Expression::Number(number.clone())),
+    _ => Ok(expression.clone()),
   }
 }

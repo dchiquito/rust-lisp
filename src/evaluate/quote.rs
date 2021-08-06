@@ -20,22 +20,22 @@ mod test {
     );
     assert_eq!(
       evaluate(&parse("(eq? (eq? 1 1) (eq? 1 1))").unwrap(), scope),
-      Ok(atom!("true"))
+      Ok(boolean!(true))
     );
     assert_eq!(
       evaluate(&parse("(eq? '(eq? 1 1) (eq? 1 1))").unwrap(), scope),
-      Ok(atom!("false"))
+      Ok(boolean!(false))
     );
     assert_eq!(
       evaluate(&parse("(eq? '(a b c) (quote (a b c)))").unwrap(), scope),
-      Ok(atom!("true"))
+      Ok(boolean!(true))
     );
     assert_eq!(
       evaluate(
         &parse("(eq? '((a b) (c d)) (quote ((a b) (c d)) ))").unwrap(),
         scope
       ),
-      Ok(atom!("true"))
+      Ok(boolean!(true))
     );
   }
 }
