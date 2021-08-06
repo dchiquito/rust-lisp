@@ -4,7 +4,8 @@ use crate::*;
 #[derive(Debug, Eq, PartialEq)]
 pub enum ParseError {
   UnexpectedEOF,
-  UnmatchedClosingParen,
+  UnexpectedClosingParen,
+  IllegalUseOfDot,
 }
 pub type ParseResult = Result<Expression, ParseError>;
 
@@ -12,8 +13,19 @@ fn parse_expression(string: &str) -> (ParseResult, String) {
   match pop_token(string) {
     (None, remainder) => (Err(ParseError::UnexpectedEOF), remainder),
     (Some(token), remainder) => match &token as &str {
-      "(" => parse_list(&remainder),
-      ")" => (Err(ParseError::UnmatchedClosingParen), remainder),
+      "(" => {
+        let (result, remainder) = parse_list(&remainder);
+        match result {
+          // The only permitted results from parse_list are:
+          Ok(Expression::Null) => (result, remainder), // The null list
+          Ok(Expression::Cons(_)) => (result, remainder), // A Cons list
+          Err(_) => (result, remainder),               // An error
+          // If it's anything else, it's the result of some shenanigans with .
+          _ => (Err(ParseError::IllegalUseOfDot), remainder),
+        }
+      }
+      ")" => (Err(ParseError::UnexpectedClosingParen), remainder),
+      "." => (Err(ParseError::IllegalUseOfDot), remainder),
       "'" => match parse_expression(&remainder) {
         (Err(err), remainder) => (Err(err), remainder),
         (Ok(quoted_value), remainder) => (Ok(list!(symbol!("quote"), quoted_value)), remainder),
@@ -46,9 +58,24 @@ fn parse_expression(string: &str) -> (ParseResult, String) {
 /// Parses a list, starting from the first element
 fn parse_list(string: &str) -> (ParseResult, String) {
   match parse_expression(string) {
-    // An UnmatchedClosingParen actually means we encountered the end of the list
-    // Lists are terminated with a nil symbol, so just return that
-    (Err(ParseError::UnmatchedClosingParen), remainder) => (Ok(null!()), remainder),
+    // UnexpectedClosingParen actually means we encountered the end of the list
+    // Lists are terminated with a null symbol, so just return that
+    (Err(ParseError::UnexpectedClosingParen), remainder) => (Ok(null!()), remainder),
+    // Ending a list with " . foo)" means that you want an improper list, i.e. no null terminator
+    (Err(ParseError::IllegalUseOfDot), remainder) => {
+      // The next expression will be the terminator, in lieu of a null
+      if let (Ok(terminator), remainder) = parse_expression(&remainder) {
+        // Parse one more expression to remove the ) token
+        if let (Err(ParseError::UnexpectedClosingParen), remainder) = parse_expression(&remainder) {
+          (Ok(terminator), remainder)
+        } else {
+          // You have to use . as the second to last element of a list
+          (Err(ParseError::IllegalUseOfDot), remainder)
+        }
+      } else {
+        (Err(ParseError::IllegalUseOfDot), remainder)
+      }
+    }
     (Ok(car), remainder) => {
       let (cdr, remainder) = parse_list(&remainder);
       if let Ok(cdr) = cdr {
@@ -90,11 +117,18 @@ mod test {
     assert_eq!(parse("#f"), Ok(boolean!(false)));
     assert_eq!(parse("#false"), Ok(boolean!(false)));
     assert_eq!(parse("("), Err(ParseError::UnexpectedEOF));
-    assert_eq!(parse(")"), Err(ParseError::UnmatchedClosingParen));
+    assert_eq!(parse(")"), Err(ParseError::UnexpectedClosingParen));
     assert_eq!(parse("'aaa"), Ok(list!(symbol!("quote"), symbol!("aaa"))));
     assert_eq!(
       parse("'(aaa)"),
       Ok(list!(symbol!("quote"), list!(symbol!("aaa"))))
     );
+    assert_eq!(parse("( 1 . 2)"), Ok(cons!(&int!(1), &int!(2))));
+    assert_eq!(
+      parse("( 1 2 . 3)"),
+      Ok(cons!(&int!(1), &cons!(&int!(2), &int!(3))))
+    );
+    assert_eq!(parse("( 1 . . 2)"), Err(ParseError::IllegalUseOfDot));
+    assert_eq!(parse("( . 2)"), Err(ParseError::IllegalUseOfDot));
   }
 }
