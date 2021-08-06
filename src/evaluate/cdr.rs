@@ -18,10 +18,7 @@ mod test {
   #[test]
   fn test_cdr() {
     let scope = &mut Scope::new();
-    assert_eq!(
-      evaluate(&parse("(cdr '(1))").unwrap(), scope),
-      Ok(atom!("nil"))
-    );
+    assert_eq!(evaluate(&parse("(cdr '(1))").unwrap(), scope), Ok(null!()));
     assert_eq!(
       evaluate(&parse("(cdr '(1 2 3))").unwrap(), scope),
       Ok(list!(int!(2), int!(3)))

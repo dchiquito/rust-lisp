@@ -25,7 +25,7 @@ fn arg_length(mut expression: &Expression) -> Result<usize, EvaluationError> {
     length += 1;
     expression = cons.cdr.as_ref();
   }
-  if expression != &atom!("nil") {
+  if expression != &null!() {
     Err(EvaluationError::InvalidArgument)
   } else {
     Ok(length)

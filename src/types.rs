@@ -98,6 +98,7 @@ pub enum Expression {
   Cons(Cons),
   Number(Number),
   Boolean(bool),
+  Null,
 }
 
 impl fmt::Display for Expression {
@@ -113,6 +114,7 @@ impl fmt::Display for Expression {
           write!(f, "#f")
         }
       }
+      Expression::Null => write!(f, "'()"),
     }
   }
 }
@@ -134,10 +136,10 @@ macro_rules! cons {
 #[macro_export]
 macro_rules! list {
     () => {
-        atom!("nil")
+        null!()
     };
     ($car:expr) => {
-        cons!(&$car, &atom!("nil"))
+        cons!(&$car, &null!())
     };
     ($car:expr, $($cdr:expr),*) => {
         cons!(&$car, &list!($($cdr),*))
@@ -155,5 +157,12 @@ macro_rules! int {
 macro_rules! boolean {
   ($boolean:expr) => {
     Expression::Boolean($boolean)
+  };
+}
+
+#[macro_export]
+macro_rules! null {
+  () => {
+    Expression::Null
   };
 }

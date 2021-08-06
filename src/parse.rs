@@ -48,7 +48,7 @@ fn parse_list(string: &str) -> (ParseResult, String) {
   match parse_expression(string) {
     // An UnmatchedClosingParen actually means we encountered the end of the list
     // Lists are terminated with a nil atom, so just return that
-    (Err(ParseError::UnmatchedClosingParen), remainder) => (Ok(atom!("nil")), remainder),
+    (Err(ParseError::UnmatchedClosingParen), remainder) => (Ok(null!()), remainder),
     (Ok(car), remainder) => {
       let (cdr, remainder) = parse_list(&remainder);
       if let Ok(cdr) = cdr {
@@ -74,7 +74,7 @@ mod test {
   #[test]
   fn test_parse() {
     assert_eq!(parse("aaa"), Ok(atom!("aaa")));
-    assert_eq!(parse("()"), Ok(atom!("nil")));
+    assert_eq!(parse("()"), Ok(null!()));
     assert_eq!(parse("(aaa)"), Ok(list!(atom!("aaa"))));
     assert_eq!(
       parse("  (  aaa   bbb  )  "),

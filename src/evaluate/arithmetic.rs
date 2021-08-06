@@ -12,7 +12,7 @@ pub fn evaluate_add(mut expression: &Expression, scope: &mut Scope) -> Evaluatio
     }
     expression = cons.cdr.as_ref();
   }
-  if expression != &atom!("nil") {
+  if expression != &null!() {
     return Err(EvaluationError::InvalidArgument);
   }
   Ok(int!(sum))
@@ -30,7 +30,7 @@ pub fn evaluate_multiply(mut expression: &Expression, scope: &mut Scope) -> Eval
     }
     expression = cons.cdr.as_ref();
   }
-  if expression != &atom!("nil") {
+  if expression != &null!() {
     return Err(EvaluationError::InvalidArgument);
   }
   Ok(int!(product))
@@ -39,7 +39,7 @@ pub fn evaluate_multiply(mut expression: &Expression, scope: &mut Scope) -> Eval
 pub fn evaluate_subtract(expression: &Expression, scope: &mut Scope) -> EvaluationResult {
   if let Expression::Cons(cons) = expression {
     if let Expression::Number(Number::Integer(mut negation)) = evaluate(cons.car.as_ref(), scope)? {
-      if cons.cdr.as_ref() == &atom!("nil") {
+      if cons.cdr.as_ref() == &null!() {
         // When a single argument is passed, it is negated
         return Ok(int!(-negation));
       }
@@ -53,7 +53,7 @@ pub fn evaluate_subtract(expression: &Expression, scope: &mut Scope) -> Evaluati
         }
         expression = cons.cdr.as_ref();
       }
-      if expression != &atom!("nil") {
+      if expression != &null!() {
         return Err(EvaluationError::InvalidArgument);
       }
       return Ok(int!(negation));
@@ -65,7 +65,7 @@ pub fn evaluate_subtract(expression: &Expression, scope: &mut Scope) -> Evaluati
 pub fn evaluate_divide(expression: &Expression, scope: &mut Scope) -> EvaluationResult {
   if let Expression::Cons(cons) = expression {
     if let Expression::Number(Number::Integer(mut quotient)) = evaluate(cons.car.as_ref(), scope)? {
-      if cons.cdr.as_ref() == &atom!("nil") {
+      if cons.cdr.as_ref() == &null!() {
         // When a single argument is passed, it is negated
         if quotient == 0 {
           return Err(EvaluationError::DivideByZero);
@@ -85,7 +85,7 @@ pub fn evaluate_divide(expression: &Expression, scope: &mut Scope) -> Evaluation
         }
         expression = cons.cdr.as_ref();
       }
-      if expression != &atom!("nil") {
+      if expression != &null!() {
         return Err(EvaluationError::InvalidArgument);
       }
       return Ok(int!(quotient));
