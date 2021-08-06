@@ -63,12 +63,21 @@ impl fmt::Display for Number {
     }
   }
 }
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum Procedure {
+  SingleArgumentForm(String, Vec<Expression>),
+  FixedArgumentForm(Vec<String>, Vec<Expression>),
+  VariableArgumentForm(Vec<String>, String, Vec<Expression>),
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Expression {
   Symbol(String),
   Cons(Cons),
   Number(Number),
   Boolean(bool),
+  Procedure(Procedure),
   Null,
 }
 
@@ -85,6 +94,7 @@ impl fmt::Display for Expression {
           write!(f, "#f")
         }
       }
+      Expression::Procedure(_) => write!(f, "#<procedure>"),
       Expression::Null => write!(f, "'()"),
     }
   }
@@ -128,6 +138,19 @@ macro_rules! int {
 macro_rules! boolean {
   ($boolean:expr) => {
     Expression::Boolean($boolean)
+  };
+}
+
+#[macro_export]
+macro_rules! procedure {
+  ($arg:expr, $body:expr) => {
+    Expression::Procedure(Procedure::SingleArgumentForm($arg, $body))
+  };
+  (fixed $arg:expr, $body:expr) => {
+    Expression::Procedure(Procedure::FixedArgumentForm($arg, $body))
+  };
+  ($arg:expr , $vararg:expr, $body:expr) => {
+    Expression::Procedure(Procedure::VariableArgumentForm($arg, $vararg, $body))
   };
 }
 
