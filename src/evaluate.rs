@@ -1,3 +1,4 @@
+mod arithmetic;
 mod car;
 mod cdr;
 mod comparison;
@@ -13,6 +14,7 @@ pub enum EvaluationError {
   WrongNumberOfArguments,
   InvalidArgument,
   UndefinedSymbol,
+  DivideByZero,
 }
 pub type EvaluationResult = Result<Expression, EvaluationError>;
 
@@ -53,6 +55,10 @@ fn arg_get(expression: &Expression, index: usize) -> EvaluationResult {
 
 fn _evaluate(function_name: &Atom, expression: &Expression, scope: &mut Scope) -> EvaluationResult {
   match &function_name.string as &str {
+    "+" => arithmetic::evaluate_add(expression, scope),
+    "*" => arithmetic::evaluate_multiply(expression, scope),
+    "-" => arithmetic::evaluate_subtract(expression, scope),
+    "/" => arithmetic::evaluate_divide(expression, scope),
     "eq?" => comparison::evaluate_eq(expression, scope),
     "quote" => quote::evaluate_quote(expression, scope),
     "cons" => cons::evaluate_cons(expression, scope),

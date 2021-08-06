@@ -23,6 +23,13 @@ fn parse_expression(string: &str) -> (ParseResult, String) {
           c.is_digit(10)
         }
         if token.chars().all(is_digit) {
+          // non-negative integers are all digits
+          (Ok(int!(token.parse().unwrap())), remainder)
+        } else if token.chars().next() == Some('-')
+          && token.len() > 1
+          && token.chars().skip(1).all(is_digit)
+        {
+          // negative numbers are also allowed
           (Ok(int!(token.parse().unwrap())), remainder)
         } else {
           (Ok(atom!(token)), remainder)
@@ -69,6 +76,11 @@ mod test {
       parse("  (  aaa   bbb  )  "),
       Ok(list!(atom!("aaa"), atom!("bbb")))
     );
+    assert_eq!(parse("1"), Ok(int!(1)));
+    assert_eq!(parse("99999"), Ok(int!(99999)));
+    assert_eq!(parse("0"), Ok(int!(0)));
+    assert_eq!(parse("-1"), Ok(int!(-1)));
+    assert_eq!(parse("-"), Ok(atom!("-")));
     assert_eq!(parse("("), Err(ParseError::UnexpectedEOF));
     assert_eq!(parse(")"), Err(ParseError::UnmatchedClosingParen));
     assert_eq!(parse("'aaa"), Ok(list!(atom!("quote"), atom!("aaa"))));

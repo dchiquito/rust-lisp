@@ -17,15 +17,9 @@ impl Atom {
   pub fn is_bool(&self) -> bool {
     self.string == "true" || self.string == "false"
   }
-  pub fn is_number(&self) -> bool {
-    fn is_digit(c: char) -> bool {
-      c.is_digit(10)
-    }
-    self.string.chars().all(is_digit)
-  }
   pub fn is_symbol(&self) -> bool {
     // it's not a symbol if it is a primitive type
-    !self.is_nil() && !self.is_bool() && !self.is_number()
+    !self.is_nil() && !self.is_bool()
   }
 }
 
