@@ -1,4 +1,8 @@
+use crate::evaluate::EvaluationResult;
+use crate::Scope;
+use std::cell::RefCell;
 use std::fmt;
+use std::rc::Rc;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Cons {
@@ -69,6 +73,12 @@ pub enum Procedure {
   SingleArgumentForm(String, Vec<Expression>),
   FixedArgumentForm(Vec<String>, Vec<Expression>),
   VariableArgumentForm(Vec<String>, String, Vec<Expression>),
+  BuiltinSingleArgumentForm(fn(Vec<Expression>, Rc<RefCell<Scope>>) -> EvaluationResult),
+  BuiltinFixedArgumentForm(fn(Vec<Expression>, Rc<RefCell<Scope>>, usize) -> EvaluationResult),
+  BuiltinVariableArgumentForm(
+    fn(Vec<Expression>, Vec<Expression>, Rc<RefCell<Scope>>) -> EvaluationResult,
+    usize,
+  ),
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
