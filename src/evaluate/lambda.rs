@@ -15,7 +15,7 @@ use std::rc::Rc;
 fn _lambda(
   args: Vec<Expression>,
   varargs: Vec<Expression>,
-  scope: Rc<RefCell<Scope>>,
+  _scope: Rc<RefCell<Scope>>,
 ) -> EvaluationResult {
   let mut formals = args.get(0).unwrap();
   // lambda requires two arguments: the formals, and at least one statement in the body.

@@ -115,7 +115,6 @@ fn evaluate_procedure(
       let args = args[0..argc].to_vec();
       builtin(args, varargs, scope)
     }
-    _ => Err(EvaluationError::UnknownFunctionName),
   }
 }
 
