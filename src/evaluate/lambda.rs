@@ -94,4 +94,54 @@ mod test {
       );
     }
   }
+  #[test]
+  fn test_lamda_fibonacci_naive() {
+    let scope = Scope::builtins();
+    evaluate(
+      &parse(
+        "
+(define fibonacci (lambda (index)
+  (cond
+    ((eq? index 0) 0)
+    ((eq? index 1) 1) 
+    (else (+
+      (fibonacci (- index 1))
+      (fibonacci (- index 2))
+    ))
+  )
+))",
+      )
+      .unwrap(),
+      scope.clone(),
+    )
+    .unwrap();
+    assert_eq!(
+      evaluate(&parse("(fibonacci 0)").unwrap(), scope.clone()),
+      Ok(int!(0))
+    );
+    assert_eq!(
+      evaluate(&parse("(fibonacci 1)").unwrap(), scope.clone()),
+      Ok(int!(1))
+    );
+    assert_eq!(
+      evaluate(&parse("(fibonacci 2)").unwrap(), scope.clone()),
+      Ok(int!(1))
+    );
+    assert_eq!(
+      evaluate(&parse("(fibonacci 3)").unwrap(), scope.clone()),
+      Ok(int!(2))
+    );
+    assert_eq!(
+      evaluate(&parse("(fibonacci 4)").unwrap(), scope.clone()),
+      Ok(int!(3))
+    );
+    assert_eq!(
+      evaluate(&parse("(fibonacci 5)").unwrap(), scope.clone()),
+      Ok(int!(5))
+    );
+    assert_eq!(
+      evaluate(&parse("(fibonacci 6)").unwrap(), scope.clone()),
+      Ok(int!(8))
+    );
+  }
 }

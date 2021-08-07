@@ -2,6 +2,7 @@ use super::*;
 use crate::evaluate::{define_builtins, EvaluationError, EvaluationResult};
 use std::collections::HashMap;
 
+#[derive(Debug)]
 pub struct Scope {
   parent: Option<Rc<RefCell<Scope>>>,
   mapping: HashMap<String, Expression>,
@@ -27,7 +28,7 @@ impl Scope {
   pub fn define(&mut self, symbol: &str, expression: Expression) {
     self.mapping.insert(String::from(symbol), expression);
   }
-  pub fn lookup(&self, symbol: &String) -> EvaluationResult {
+  pub fn lookup(&self, symbol: &str) -> EvaluationResult {
     match self.mapping.get(symbol) {
       Some(expression) => Ok(expression.clone()),
       None => {

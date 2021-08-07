@@ -80,9 +80,11 @@ fn evaluate_procedure(
         return Err(EvaluationError::WrongNumberOfArguments);
       }
       // Bind the arguments to their symbols
-      let inner_scope = Scope::child(scope);
+      let inner_scope = Scope::child(scope.clone());
       for (arg_name, arg) in arg_names.iter().zip(args.iter()) {
-        inner_scope.borrow_mut().define(arg_name, arg.clone());
+        inner_scope
+          .borrow_mut()
+          .define(arg_name, evaluate(&arg.clone(), scope.clone())?);
       }
       _evaluate_procedure_body(body, inner_scope)
     }
@@ -91,14 +93,21 @@ fn evaluate_procedure(
         return Err(EvaluationError::WrongNumberOfArguments);
       }
       // Bind the arguments to their symbols
-      let inner_scope = Scope::child(scope);
+      let inner_scope = Scope::child(scope.clone());
       // Bind the named arguments
       for (arg_name, arg) in arg_names.iter().zip(args.iter()) {
-        inner_scope.borrow_mut().define(arg_name, arg.clone());
+        inner_scope
+          .borrow_mut()
+          .define(arg_name, evaluate(&arg.clone(), scope.clone())?);
+      }
+      let varargs = args[arg_names.len()..].to_vec();
+      let mut evaluated_varargs = vec![];
+      for vararg in &varargs {
+        evaluated_varargs.push(evaluate(vararg, scope.clone())?);
       }
       inner_scope
         .borrow_mut()
-        .define(&vararg_name, vec_arg(args[arg_names.len()..].to_vec())?);
+        .define(&vararg_name, vec_arg(evaluated_varargs)?);
       _evaluate_procedure_body(body, inner_scope)
     }
     Procedure::BuiltinFixedArgumentForm(builtin, argc) => {
