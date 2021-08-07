@@ -5,7 +5,7 @@ mod comparison;
 // mod cons;
 // mod define;
 // mod lambda;
-// mod quote;
+mod quote;
 
 use crate::*;
 use std::cell::RefCell;
@@ -42,6 +42,7 @@ pub fn define_builtins(scope: Rc<RefCell<Scope>>) {
   scope.define("-", arithmetic::SUBTRACT);
   scope.define("/", arithmetic::DIVIDE);
   scope.define("eq?", comparison::EQ);
+  scope.define("quote", quote::QUOTE);
 }
 
 // fn _evaluate(function_name: &str, expression: &Expression, scope: &mut Scope) -> EvaluationResult {

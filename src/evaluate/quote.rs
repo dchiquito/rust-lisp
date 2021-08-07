@@ -1,9 +1,10 @@
 use super::*;
 
-pub fn evaluate_quote(expression: &Expression, _scope: &mut Scope) -> EvaluationResult {
-  assert_arg_length(expression, 1)?;
-  Ok(arg_get(expression, 0)?)
+fn _quote(args: Vec<Expression>, _scope: Rc<RefCell<Scope>>) -> EvaluationResult {
+  Ok(args.get(0).unwrap().clone())
 }
+
+pub const QUOTE: Expression = Expression::Procedure(Procedure::BuiltinFixedArgumentForm(_quote, 1));
 
 #[cfg(test)]
 mod test {
@@ -12,28 +13,34 @@ mod test {
 
   #[test]
   fn test_quote() {
-    let scope = &mut Scope::new();
-    assert_eq!(evaluate(&parse("'foo").unwrap(), scope), Ok(symbol!("foo")));
+    let scope = Scope::builtins();
     assert_eq!(
-      evaluate(&parse("'(foo)").unwrap(), scope),
+      evaluate(&parse("'foo").unwrap(), scope.clone()),
+      Ok(symbol!("foo"))
+    );
+    assert_eq!(
+      evaluate(&parse("'(foo)").unwrap(), scope.clone()),
       Ok(list!(symbol!("foo")))
     );
     assert_eq!(
-      evaluate(&parse("(eq? (eq? 1 1) (eq? 1 1))").unwrap(), scope),
+      evaluate(&parse("(eq? (eq? 1 1) (eq? 1 1))").unwrap(), scope.clone()),
       Ok(boolean!(true))
     );
     assert_eq!(
-      evaluate(&parse("(eq? '(eq? 1 1) (eq? 1 1))").unwrap(), scope),
+      evaluate(&parse("(eq? '(eq? 1 1) (eq? 1 1))").unwrap(), scope.clone()),
       Ok(boolean!(false))
     );
     assert_eq!(
-      evaluate(&parse("(eq? '(a b c) (quote (a b c)))").unwrap(), scope),
+      evaluate(
+        &parse("(eq? '(a b c) (quote (a b c)))").unwrap(),
+        scope.clone()
+      ),
       Ok(boolean!(true))
     );
     assert_eq!(
       evaluate(
         &parse("(eq? '((a b) (c d)) (quote ((a b) (c d)) ))").unwrap(),
-        scope
+        scope.clone()
       ),
       Ok(boolean!(true))
     );
