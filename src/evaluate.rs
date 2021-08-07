@@ -1,7 +1,7 @@
 mod arithmetic;
 // mod car;
 // mod cdr;
-// mod comparison;
+mod comparison;
 // mod cons;
 // mod define;
 // mod lambda;
@@ -41,6 +41,7 @@ pub fn define_builtins(scope: Rc<RefCell<Scope>>) {
   scope.define("*", arithmetic::MULTIPLY);
   scope.define("-", arithmetic::SUBTRACT);
   scope.define("/", arithmetic::DIVIDE);
+  scope.define("eq?", comparison::EQ);
 }
 
 // fn _evaluate(function_name: &str, expression: &Expression, scope: &mut Scope) -> EvaluationResult {
@@ -70,6 +71,13 @@ fn evaluate_procedure(
   scope: Rc<RefCell<Scope>>,
 ) -> EvaluationResult {
   match procedure {
+    Procedure::BuiltinFixedArgumentForm(builtin, argc) => {
+      let args = arg_vec(args)?;
+      if args.len() != argc {
+        return Err(EvaluationError::WrongNumberOfArguments);
+      }
+      builtin(args, scope)
+    }
     Procedure::BuiltinVariableArgumentForm(builtin, argc) => {
       let args = arg_vec(args)?;
       if args.len() < argc {

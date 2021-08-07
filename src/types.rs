@@ -74,7 +74,10 @@ pub enum Procedure {
   FixedArgumentForm(Vec<String>, Vec<Expression>),
   VariableArgumentForm(Vec<String>, String, Vec<Expression>),
   BuiltinSingleArgumentForm(fn(Vec<Expression>, Rc<RefCell<Scope>>) -> EvaluationResult),
-  BuiltinFixedArgumentForm(fn(Vec<Expression>, Rc<RefCell<Scope>>, usize) -> EvaluationResult),
+  BuiltinFixedArgumentForm(
+    fn(Vec<Expression>, Rc<RefCell<Scope>>) -> EvaluationResult,
+    usize,
+  ),
   BuiltinVariableArgumentForm(
     fn(Vec<Expression>, Vec<Expression>, Rc<RefCell<Scope>>) -> EvaluationResult,
     usize,

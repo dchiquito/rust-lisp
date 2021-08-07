@@ -1,16 +1,12 @@
 use super::*;
 
-pub fn evaluate_eq(expression: &Expression, scope: &mut Scope) -> EvaluationResult {
-  assert_arg_length(expression, 2)?;
-  let a = evaluate(&arg_get(expression, 0)?, scope)?;
-  let b = evaluate(&arg_get(expression, 1)?, scope)?;
-
-  if a == b {
-    Ok(boolean!(true))
-  } else {
-    Ok(boolean!(false))
-  }
+fn _eq(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> EvaluationResult {
+  let a = evaluate(args.get(0).unwrap(), scope.clone())?;
+  let b = evaluate(args.get(1).unwrap(), scope.clone())?;
+  Ok(boolean!(a == b))
 }
+
+pub const EQ: Expression = Expression::Procedure(Procedure::BuiltinFixedArgumentForm(_eq, 2));
 
 #[cfg(test)]
 mod test {
@@ -19,25 +15,25 @@ mod test {
 
   #[test]
   fn test_evaluate_eq() {
-    let scope = &mut Scope::new();
+    let scope = Scope::builtins();
     assert_eq!(
-      evaluate(&parse("(eq? 1 1)").unwrap(), scope),
+      evaluate(&parse("(eq? 1 1)").unwrap(), scope.clone()),
       Ok(boolean!(true))
     );
     assert_eq!(
-      evaluate(&parse("(eq? 'foo 'foo)").unwrap(), scope),
+      evaluate(&parse("(eq? 'foo 'foo)").unwrap(), scope.clone()),
       Ok(boolean!(true))
     );
     assert_eq!(
-      evaluate(&parse("(eq? 'foo 'bar)").unwrap(), scope),
+      evaluate(&parse("(eq? 'foo 'bar)").unwrap(), scope.clone()),
       Ok(boolean!(false))
     );
     assert_eq!(
-      evaluate(&parse("(eq? (eq? 1 1) #t)").unwrap(), scope),
+      evaluate(&parse("(eq? (eq? 1 1) #t)").unwrap(), scope.clone()),
       Ok(boolean!(true))
     );
     assert_eq!(
-      evaluate(&parse("(eq? (eq? 1 1) #true)").unwrap(), scope),
+      evaluate(&parse("(eq? (eq? 1 1) #true)").unwrap(), scope.clone()),
       Ok(boolean!(true))
     );
   }
