@@ -70,10 +70,8 @@ impl fmt::Display for Number {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Procedure {
-  SingleArgumentForm(String, Vec<Expression>),
   FixedArgumentForm(Vec<String>, Vec<Expression>),
   VariableArgumentForm(Vec<String>, String, Vec<Expression>),
-  BuiltinSingleArgumentForm(fn(Vec<Expression>, Rc<RefCell<Scope>>) -> EvaluationResult),
   BuiltinFixedArgumentForm(
     fn(Vec<Expression>, Rc<RefCell<Scope>>) -> EvaluationResult,
     usize,
@@ -157,9 +155,6 @@ macro_rules! boolean {
 #[macro_export]
 macro_rules! procedure {
   ($arg:expr, $body:expr) => {
-    Expression::Procedure(Procedure::SingleArgumentForm($arg, $body))
-  };
-  (fixed $arg:expr, $body:expr) => {
     Expression::Procedure(Procedure::FixedArgumentForm($arg, $body))
   };
   ($arg:expr , $vararg:expr, $body:expr) => {

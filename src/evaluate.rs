@@ -1,8 +1,8 @@
 mod arithmetic;
 mod comparison;
 mod define;
+mod lambda;
 mod pair;
-// mod lambda;
 mod quote;
 
 use crate::*;
@@ -32,6 +32,14 @@ fn arg_vec(mut expression: &Expression) -> Result<Vec<Expression>, EvaluationErr
   Ok(args)
 }
 
+fn vec_arg(mut args: Vec<Expression>) -> EvaluationResult {
+  let mut list = null!();
+  while let Some(arg) = args.pop() {
+    list = cons!(&arg, &list);
+  }
+  Ok(list)
+}
+
 /// Plop all of the builtins into the given scope
 pub fn define_builtins(scope: Rc<RefCell<Scope>>) {
   let mut scope = scope.borrow_mut();
@@ -45,44 +53,59 @@ pub fn define_builtins(scope: Rc<RefCell<Scope>>) {
   scope.define("car", pair::CAR);
   scope.define("cdr", pair::CDR);
   scope.define("define", define::DEFINE);
+  scope.define("lambda", lambda::LAMBDA);
 }
 
-// fn _evaluate(function_name: &str, expression: &Expression, scope: &mut Scope) -> EvaluationResult {
-//   match function_name {
-//     "+" => arithmetic::evaluate_add(expression, scope),
-//     "*" => arithmetic::evaluate_multiply(expression, scope),
-//     "-" => arithmetic::evaluate_subtract(expression, scope),
-//     "/" => arithmetic::evaluate_divide(expression, scope),
-//     "eq?" => comparison::evaluate_eq(expression, scope),
-//     "quote" => quote::evaluate_quote(expression, scope),
-//     "cons" => cons::evaluate_cons(expression, scope),
-//     "car" => car::evaluate_car(expression, scope),
-//     "cdr" => cdr::evaluate_cdr(expression, scope),
-//     "define" => define::evaluate_define(expression, scope),
-//     "lambda" => lambda::evaluate_lambda(expression, scope),
-//     // TODO look up lambdas from the scope
-//     Expression::Procedure(procedure) => {
-//       lambda::evaluate_procedure(procedure, cons.cdr.as_ref(), scope)
-//     }
-//     _ => Err(EvaluationError::UnknownFunctionName),
-//   }
-// }
+/// Evaluate all the lines in the body, and return the last result
+fn _evaluate_procedure_body(body: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> EvaluationResult {
+  let mut body = body.iter();
+  let mut return_value = evaluate(body.next().unwrap(), scope.clone())?;
+  for line in body {
+    return_value = evaluate(line, scope.clone())?;
+  }
+  Ok(return_value)
+}
 
 fn evaluate_procedure(
   procedure: Procedure,
   args: &Expression,
   scope: Rc<RefCell<Scope>>,
 ) -> EvaluationResult {
+  let args = arg_vec(args)?;
   match procedure {
+    Procedure::FixedArgumentForm(arg_names, body) => {
+      if args.len() != arg_names.len() {
+        return Err(EvaluationError::WrongNumberOfArguments);
+      }
+      // Bind the arguments to their symbols
+      let inner_scope = Scope::child(scope);
+      for (arg_name, arg) in arg_names.iter().zip(args.iter()) {
+        inner_scope.borrow_mut().define(arg_name, arg.clone());
+      }
+      _evaluate_procedure_body(body, inner_scope)
+    }
+    Procedure::VariableArgumentForm(arg_names, vararg_name, body) => {
+      if args.len() < arg_names.len() {
+        return Err(EvaluationError::WrongNumberOfArguments);
+      }
+      // Bind the arguments to their symbols
+      let inner_scope = Scope::child(scope);
+      // Bind the named arguments
+      for (arg_name, arg) in arg_names.iter().zip(args.iter()) {
+        inner_scope.borrow_mut().define(arg_name, arg.clone());
+      }
+      inner_scope
+        .borrow_mut()
+        .define(&vararg_name, vec_arg(args[arg_names.len()..].to_vec())?);
+      _evaluate_procedure_body(body, inner_scope)
+    }
     Procedure::BuiltinFixedArgumentForm(builtin, argc) => {
-      let args = arg_vec(args)?;
       if args.len() != argc {
         return Err(EvaluationError::WrongNumberOfArguments);
       }
       builtin(args, scope)
     }
     Procedure::BuiltinVariableArgumentForm(builtin, argc) => {
-      let args = arg_vec(args)?;
       if args.len() < argc {
         return Err(EvaluationError::WrongNumberOfArguments);
       }
@@ -95,7 +118,6 @@ fn evaluate_procedure(
 }
 
 pub fn evaluate(expression: &Expression, scope: Rc<RefCell<Scope>>) -> EvaluationResult {
-  println!("evaluatin {}", expression);
   match expression {
     Expression::Symbol(symbol) => scope.borrow().lookup(symbol),
     Expression::Cons(cons) => match evaluate(cons.car.as_ref(), scope.clone())? {
