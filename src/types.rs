@@ -90,6 +90,7 @@ pub enum Expression {
   Boolean(bool),
   Procedure(Procedure),
   Null,
+  Void,
 }
 
 impl fmt::Display for Expression {
@@ -107,6 +108,7 @@ impl fmt::Display for Expression {
       }
       Expression::Procedure(_) => write!(f, "#<procedure>"),
       Expression::Null => write!(f, "'()"),
+      Expression::Void => write!(f, "#<void>"),
     }
   }
 }
@@ -166,5 +168,12 @@ macro_rules! procedure {
 macro_rules! null {
   () => {
     Expression::Null
+  };
+}
+
+#[macro_export]
+macro_rules! void {
+  () => {
+    Expression::Void
   };
 }

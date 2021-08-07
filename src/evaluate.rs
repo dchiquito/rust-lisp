@@ -1,5 +1,6 @@
 mod arithmetic;
 mod comparison;
+mod conditional;
 mod define;
 mod lambda;
 mod pair;
@@ -54,6 +55,7 @@ pub fn define_builtins(scope: Rc<RefCell<Scope>>) {
   scope.define("cdr", pair::CDR);
   scope.define("define", define::DEFINE);
   scope.define("lambda", lambda::LAMBDA);
+  scope.define("cond", conditional::COND);
 }
 
 /// Evaluate all the lines in the body, and return the last result
