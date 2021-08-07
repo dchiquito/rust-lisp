@@ -13,7 +13,7 @@ use std::io::{self, Write};
 use std::rc::Rc;
 
 fn main() -> io::Result<()> {
-    let mut scope = Rc::new(RefCell::new(Scope::new()));
+    let scope = Rc::new(RefCell::new(Scope::new()));
     define_builtins(scope.clone());
     loop {
         let mut input = String::new();

@@ -1,5 +1,5 @@
 use super::*;
-use crate::evaluate::{EvaluationError, EvaluationResult};
+use crate::evaluate::{define_builtins, EvaluationError, EvaluationResult};
 use std::collections::HashMap;
 
 pub struct Scope {
@@ -13,6 +13,11 @@ impl Scope {
       parent: None,
       mapping: HashMap::new(),
     }
+  }
+  pub fn builtins() -> Rc<RefCell<Scope>> {
+    let scope = Rc::new(RefCell::new(Scope::new()));
+    define_builtins(scope.clone());
+    scope
   }
   pub fn define(&mut self, symbol: &str, expression: Expression) {
     self.mapping.insert(String::from(symbol), expression);

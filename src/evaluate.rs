@@ -22,41 +22,6 @@ pub enum EvaluationError {
 }
 pub type EvaluationResult = Result<Expression, EvaluationError>;
 
-// Some helpers to cut down on the boilerplate
-fn arg_length(mut expression: &Expression) -> Result<usize, EvaluationError> {
-  let mut length = 0;
-  while let Expression::Cons(cons) = expression {
-    length += 1;
-    expression = cons.cdr.as_ref();
-  }
-  if expression != &null!() {
-    Err(EvaluationError::InvalidArgument)
-  } else {
-    Ok(length)
-  }
-}
-fn assert_arg_length(
-  expression: &Expression,
-  expected_length: usize,
-) -> Result<(), EvaluationError> {
-  if arg_length(expression)? != expected_length {
-    Err(EvaluationError::WrongNumberOfArguments)
-  } else {
-    Ok(())
-  }
-}
-fn arg_get(expression: &Expression, index: usize) -> EvaluationResult {
-  if let Expression::Cons(cons) = expression {
-    if index == 0 {
-      Ok(cons.car.as_ref().clone())
-    } else {
-      arg_get(cons.cdr.as_ref(), index - 1)
-    }
-  } else {
-    Err(EvaluationError::WrongNumberOfArguments)
-  }
-}
-
 fn arg_vec(mut expression: &Expression) -> Result<Vec<Expression>, EvaluationError> {
   let mut args = vec![];
   while let Expression::Cons(cons) = expression {
@@ -71,7 +36,11 @@ fn arg_vec(mut expression: &Expression) -> Result<Vec<Expression>, EvaluationErr
 
 /// Plop all of the builtins into the given scope
 pub fn define_builtins(scope: Rc<RefCell<Scope>>) {
-  scope.borrow_mut().define("+", arithmetic::add_procedure)
+  let mut scope = scope.borrow_mut();
+  scope.define("+", arithmetic::ADD);
+  scope.define("*", arithmetic::MULTIPLY);
+  scope.define("-", arithmetic::SUBTRACT);
+  scope.define("/", arithmetic::DIVIDE);
 }
 
 // fn _evaluate(function_name: &str, expression: &Expression, scope: &mut Scope) -> EvaluationResult {
@@ -104,7 +73,7 @@ fn evaluate_procedure(
     Procedure::BuiltinVariableArgumentForm(builtin, argc) => {
       let args = arg_vec(args)?;
       if args.len() < argc {
-        return Err(EvaluationError::InvalidArgument);
+        return Err(EvaluationError::WrongNumberOfArguments);
       }
       let varargs = args[argc..].to_vec();
       let args = args[0..argc].to_vec();
