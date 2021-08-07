@@ -1,7 +1,7 @@
 mod arithmetic;
 mod comparison;
+mod define;
 mod pair;
-// mod define;
 // mod lambda;
 mod quote;
 
@@ -44,6 +44,7 @@ pub fn define_builtins(scope: Rc<RefCell<Scope>>) {
   scope.define("cons", pair::CONS);
   scope.define("car", pair::CAR);
   scope.define("cdr", pair::CDR);
+  scope.define("define", define::DEFINE);
 }
 
 // fn _evaluate(function_name: &str, expression: &Expression, scope: &mut Scope) -> EvaluationResult {
