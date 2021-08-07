@@ -1,8 +1,6 @@
 mod arithmetic;
-// mod car;
-// mod cdr;
 mod comparison;
-// mod cons;
+mod pair;
 // mod define;
 // mod lambda;
 mod quote;
@@ -43,6 +41,9 @@ pub fn define_builtins(scope: Rc<RefCell<Scope>>) {
   scope.define("/", arithmetic::DIVIDE);
   scope.define("eq?", comparison::EQ);
   scope.define("quote", quote::QUOTE);
+  scope.define("cons", pair::CONS);
+  scope.define("car", pair::CAR);
+  scope.define("cdr", pair::CDR);
 }
 
 // fn _evaluate(function_name: &str, expression: &Expression, scope: &mut Scope) -> EvaluationResult {
@@ -93,6 +94,7 @@ fn evaluate_procedure(
 }
 
 pub fn evaluate(expression: &Expression, scope: Rc<RefCell<Scope>>) -> EvaluationResult {
+  println!("evaluatin {}", expression);
   match expression {
     Expression::Symbol(symbol) => scope.borrow().lookup(symbol),
     Expression::Cons(cons) => match evaluate(cons.car.as_ref(), scope.clone())? {
