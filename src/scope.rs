@@ -4,21 +4,24 @@ use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct Scope {
-  // TODO this should be global, not parent
-  parent: Option<Rc<RefCell<Scope>>>,
+  global: Option<Rc<RefCell<Scope>>>,
   mapping: HashMap<String, Expression>,
 }
 
 impl Scope {
   pub fn new() -> Scope {
     Scope {
-      parent: None,
+      global: None,
       mapping: HashMap::new(),
     }
   }
   pub fn child(parent: Rc<RefCell<Scope>>) -> Rc<RefCell<Scope>> {
     let mut scope = Scope::new();
-    scope.parent = Some(parent);
+    scope.global = if let Some(global) = &parent.clone().borrow().global {
+      Some(global.clone())
+    } else {
+      Some(parent)
+    };
     Rc::new(RefCell::new(scope))
   }
   pub fn builtins() -> Rc<RefCell<Scope>> {
@@ -33,8 +36,8 @@ impl Scope {
     match self.mapping.get(symbol) {
       Some(expression) => Ok(expression.clone()),
       None => {
-        if let Some(parent) = &self.parent {
-          parent.borrow().lookup(symbol)
+        if let Some(global) = &self.global {
+          global.borrow().lookup(symbol)
         } else {
           Err(EvaluationError::UndefinedSymbol)
         }

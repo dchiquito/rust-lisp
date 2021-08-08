@@ -173,7 +173,7 @@ mod test {
     );
     // This will stack overflow unless tail call recursion is working correctly
     assert_eq!(
-      evaluate(&parse("(loopy 1000)").unwrap(), scope.clone()),
+      evaluate(&parse("(loopy 10000)").unwrap(), scope.clone()),
       Ok(int!(0))
     );
   }
