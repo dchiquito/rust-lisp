@@ -28,15 +28,9 @@ impl Cons {
         write!(f, "{} ", self.car)?;
         cons.fmt_as_inner_element(f)?;
       }
-      Expression::Symbol(symbol) => {
-        if symbol == "nil" {
-          // We have reached the nil terminator
-          write!(f, "{})", self.car)?;
-        } else {
-          // There is no nil terminator, so this isn't actually a list!
-          // Format the final symbol with the special cons cell .
-          write!(f, "{} . {})", self.car, self.cdr)?;
-        }
+      Expression::Null => {
+        // We have reached the nil terminator
+        write!(f, "{})", self.car)?;
       }
       _ => {
         // There is no nil terminator, so this isn't actually a list!
