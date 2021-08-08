@@ -4,7 +4,7 @@ use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 pub struct Cons {
   pub car: Box<Expression>,
   pub cdr: Box<Expression>,
@@ -48,6 +48,12 @@ impl fmt::Display for Cons {
     self.fmt_as_inner_element(f)
   }
 }
+impl fmt::Debug for Cons {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    write!(f, "(")?;
+    self.fmt_as_inner_element(f)
+  }
+}
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Number {
@@ -76,7 +82,7 @@ pub enum Procedure {
   ),
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 pub enum Expression {
   Symbol(String),
   Cons(Cons),
@@ -88,6 +94,25 @@ pub enum Expression {
 }
 
 impl fmt::Display for Expression {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    match self {
+      Expression::Symbol(symbol) => write!(f, "{}", symbol),
+      Expression::Cons(cons) => write!(f, "{}", cons),
+      Expression::Number(number) => write!(f, "{}", number),
+      Expression::Boolean(boolean) => {
+        if *boolean {
+          write!(f, "#t")
+        } else {
+          write!(f, "#f")
+        }
+      }
+      Expression::Procedure(_) => write!(f, "#<procedure>"),
+      Expression::Null => write!(f, "'()"),
+      Expression::Void => write!(f, "#<void>"),
+    }
+  }
+}
+impl fmt::Debug for Expression {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     match self {
       Expression::Symbol(symbol) => write!(f, "{}", symbol),
