@@ -58,7 +58,7 @@ mod test {
   use crate::parse::parse;
 
   #[test]
-  fn test_lamda_inline() {
+  fn test_lambda_inline() {
     let scope = Scope::builtins();
     assert_eq!(
       evaluate(&parse("((lambda (x) (+ x 1)) 5)").unwrap(), scope.clone()),
@@ -80,7 +80,7 @@ mod test {
     );
   }
   #[test]
-  fn test_lamda_define() {
+  fn test_lambda_define() {
     let scope = Scope::builtins();
     evaluate(
       &parse("(define square (lambda (a) (* a a)))").unwrap(),
@@ -95,7 +95,7 @@ mod test {
     }
   }
   #[test]
-  fn test_lamda_fibonacci_naive() {
+  fn test_lambda_fibonacci_naive() {
     let scope = Scope::builtins();
     evaluate(
       &parse(
@@ -103,7 +103,7 @@ mod test {
 (define fibonacci (lambda (index)
   (cond
     ((eq? index 0) 0)
-    ((eq? index 1) 1) 
+    ((eq? index 1) 1)
     (else (+
       (fibonacci (- index 1))
       (fibonacci (- index 2))
@@ -142,6 +142,44 @@ mod test {
     assert_eq!(
       evaluate(&parse("(fibonacci 6)").unwrap(), scope.clone()),
       Ok(int!(8))
+    );
+  }
+  #[test]
+  fn test_lambda_tail_call_recursion() {
+    let scope = Scope::builtins();
+    evaluate(
+      &parse(
+        "
+(define loopy (lambda (index)
+  (cond
+    ((eq? index 0) 0)
+    (else (+
+      (loopy (- index 1))
+      1
+    ))
+  )
+))",
+      )
+      .unwrap(),
+      scope.clone(),
+    )
+    .unwrap();
+    assert_eq!(
+      evaluate(&parse("(loopy 0)").unwrap(), scope.clone()),
+      Ok(int!(0))
+    );
+    assert_eq!(
+      evaluate(&parse("(loopy 1)").unwrap(), scope.clone()),
+      Ok(int!(1))
+    );
+    assert_eq!(
+      evaluate(&parse("(loopy 2)").unwrap(), scope.clone()),
+      Ok(int!(2))
+    );
+    // This will stack overflow unless tail call recursion is working correctly
+    assert_eq!(
+      evaluate(&parse("(loopy 10000)").unwrap(), scope.clone()),
+      Ok(int!(10000))
     );
   }
 }

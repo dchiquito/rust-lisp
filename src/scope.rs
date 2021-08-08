@@ -4,6 +4,7 @@ use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct Scope {
+  // TODO this should be global, not parent
   parent: Option<Rc<RefCell<Scope>>>,
   mapping: HashMap<String, Expression>,
 }
