@@ -153,10 +153,7 @@ mod test {
 (define loopy (lambda (index)
   (cond
     ((eq? index 0) 0)
-    (else (+
-      (loopy (- index 1))
-      1
-    ))
+    (else (loopy (- index 1)))
   )
 ))",
       )
@@ -170,16 +167,16 @@ mod test {
     );
     assert_eq!(
       evaluate(&parse("(loopy 1)").unwrap(), scope.clone()),
-      Ok(int!(1))
+      Ok(int!(0))
     );
     assert_eq!(
       evaluate(&parse("(loopy 2)").unwrap(), scope.clone()),
-      Ok(int!(2))
+      Ok(int!(0))
     );
     // This will stack overflow unless tail call recursion is working correctly
     assert_eq!(
       evaluate(&parse("(loopy 10000)").unwrap(), scope.clone()),
-      Ok(int!(10000))
+      Ok(int!(0))
     );
   }
 }
