@@ -38,6 +38,8 @@ fn main() -> io::Result<()> {
                 continue;
             }
         };
-        println!("{}", evaluation);
+        if evaluation != Expression::Void {
+            println!("{}", evaluation.outer_representation());
+        }
     }
 }

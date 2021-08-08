@@ -132,6 +132,26 @@ impl fmt::Debug for Expression {
   }
 }
 
+impl Expression {
+  pub fn outer_representation(&self) -> String {
+    match self {
+      Expression::Symbol(symbol) => format!("'{}", symbol),
+      Expression::Cons(cons) => format!("'{}", cons),
+      Expression::Number(number) => format!("{}", number),
+      Expression::Boolean(boolean) => {
+        if *boolean {
+          format!("#t")
+        } else {
+          format!("#f")
+        }
+      }
+      Expression::Procedure(_) => format!("#<procedure>"),
+      Expression::Null => format!("'()"),
+      Expression::Void => format!("#<void>"),
+    }
+  }
+}
+
 #[macro_export]
 macro_rules! symbol {
   ($symbol:expr) => {
