@@ -152,11 +152,7 @@ fn evaluate_procedure(
 ) -> EvaluationResult {
   let mut procedure_value = _evaluate_procedure(procedure, args, scope)?;
   while let ProcedureValue::TailCall(child_procedure, args, arg_scope) = procedure_value {
-    // if &child_procedure == procedure {
     procedure_value = _evaluate_procedure(&child_procedure, &args, arg_scope)?
-    // } else {
-    //   return evaluate_procedure(&child_procedure, &args, arg_scope);
-    // }
   }
   match procedure_value {
     ProcedureValue::Expression(expression) => Ok(expression),

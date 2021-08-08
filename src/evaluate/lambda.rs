@@ -2,16 +2,6 @@ use super::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-// pub fn evaluate_lambda(expression: &Expression, scope: &mut Scope) -> EvaluationResult {
-//   if let Expression::Cons(cons) = expression {
-//     let formals = cons.car.as_ref();
-//     let body = cons.cdr.as_ref();
-//     new_procedure(formals, body)
-//   } else {
-//     Err(EvaluationError::InvalidArgument)
-//   }
-// }
-
 fn _lambda(
   args: Vec<Expression>,
   varargs: Vec<Expression>,
