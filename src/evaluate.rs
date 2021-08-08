@@ -21,16 +21,17 @@ pub enum EvaluationError {
 }
 pub type EvaluationResult = Result<Expression, EvaluationError>;
 
+#[derive(Clone, Debug)]
 pub enum ProcedureValue {
   Expression(Expression),
   TailCall(Procedure, Expression, Rc<RefCell<Scope>>),
 }
 impl ProcedureValue {
-  pub fn evaluate(&self, scope: Rc<RefCell<Scope>>) -> EvaluationResult {
+  pub fn resolve(&self) -> EvaluationResult {
     match self {
       ProcedureValue::Expression(expression) => Ok(expression.clone()),
       ProcedureValue::TailCall(procedure, expression, arg_scope) => {
-        evaluate_procedure(procedure.clone(), expression, arg_scope.clone())
+        evaluate_procedure(procedure, expression, arg_scope.clone())
       }
     }
   }
@@ -75,24 +76,24 @@ pub fn define_builtins(scope: Rc<RefCell<Scope>>) {
 }
 
 /// Evaluate all the lines in the body, and return the last result
-fn _evaluate_procedure_body(body: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> ProcedureResult {
+fn _evaluate_procedure_body(body: &Vec<Expression>, scope: Rc<RefCell<Scope>>) -> ProcedureResult {
   // let last_line = body.pop().unwrap();
 
   let mut body = body.iter();
-  let mut return_value = evaluate(body.next().unwrap(), scope.clone())?;
+  let mut return_value = evaluate_in_tail_position(body.next().unwrap(), scope.clone())?;
   for line in body {
-    return_value = evaluate(line, scope.clone())?;
+    return_value = evaluate_in_tail_position(line, scope.clone())?;
   }
-  Ok(ProcedureValue::Expression(return_value))
+  Ok(return_value)
 }
 
-fn evaluate_procedure(
-  procedure: Procedure,
+fn _evaluate_procedure(
+  procedure: &Procedure,
   args: &Expression,
   scope: Rc<RefCell<Scope>>,
-) -> EvaluationResult {
+) -> ProcedureResult {
   let args = arg_vec(args)?;
-  let procedure_result = match procedure {
+  match &procedure {
     Procedure::FixedArgumentForm(arg_names, body) => {
       if args.len() != arg_names.len() {
         return Err(EvaluationError::WrongNumberOfArguments);
@@ -129,32 +130,44 @@ fn evaluate_procedure(
       _evaluate_procedure_body(body, inner_scope)
     }
     Procedure::BuiltinFixedArgumentForm(builtin, argc) => {
-      if args.len() != argc {
+      if args.len() != *argc {
         return Err(EvaluationError::WrongNumberOfArguments);
       }
       builtin(args, scope)
     }
     Procedure::BuiltinVariableArgumentForm(builtin, argc) => {
-      if args.len() < argc {
+      if args.len() < *argc {
         return Err(EvaluationError::WrongNumberOfArguments);
       }
-      let varargs = args[argc..].to_vec();
-      let args = args[0..argc].to_vec();
+      let varargs = args[*argc..].to_vec();
+      let args = args[0..*argc].to_vec();
       builtin(args, varargs, scope)
     }
-  };
-  match procedure_result {
-    Ok(ProcedureValue::Expression(expression)) => Ok(expression),
-    Ok(ProcedureValue::TailCall(procedure, expression, arg_scope)) => {
-      Err(EvaluationError::DivideByZero)
-    }
-    Err(err) => Err(err),
+  }
+}
+fn evaluate_procedure(
+  procedure: &Procedure,
+  args: &Expression,
+  scope: Rc<RefCell<Scope>>,
+) -> EvaluationResult {
+  let mut procedure_value = _evaluate_procedure(procedure, args, scope)?;
+  while let ProcedureValue::TailCall(child_procedure, args, arg_scope) = procedure_value {
+    // if &child_procedure == procedure {
+    procedure_value = _evaluate_procedure(&child_procedure, &args, arg_scope)?
+    // } else {
+    //   return evaluate_procedure(&child_procedure, &args, arg_scope);
+    // }
+  }
+  match procedure_value {
+    ProcedureValue::Expression(expression) => Ok(expression),
+    ProcedureValue::TailCall(_, _, _) => panic!(),
   }
 }
 
 /// This should behave identically to evaluate, but return a wrapper around a procedure call
 /// instead of calling it immediately. This allows evaluate_procedure to call the procedure in a
 /// loop instead of evaluating it recursively.
+/// This function should always be used to evaluate any expression in a tail position.
 pub fn evaluate_in_tail_position(
   expression: &Expression,
   scope: Rc<RefCell<Scope>>,
@@ -177,20 +190,5 @@ pub fn evaluate_in_tail_position(
 }
 
 pub fn evaluate(expression: &Expression, scope: Rc<RefCell<Scope>>) -> EvaluationResult {
-  // match expression {
-  //   Expression::Symbol(symbol) => scope.borrow().lookup(symbol),
-  //   Expression::Cons(cons) => match evaluate(cons.car.as_ref(), scope.clone())? {
-  //     Expression::Procedure(procedure) => {
-  //       evaluate_procedure(procedure, arg_vec(cons.cdr.as_ref())?, scope)
-  //     }
-  //     _ => Err(EvaluationError::NotAProcedure),
-  //   },
-  //   _ => Ok(expression.clone()),
-  // }
-  match evaluate_in_tail_position(expression, scope.clone())? {
-    ProcedureValue::Expression(expression) => Ok(expression),
-    ProcedureValue::TailCall(procedure, args, arg_scope) => {
-      evaluate_procedure(procedure, &args, scope)
-    }
-  }
+  evaluate_in_tail_position(expression, scope.clone())?.resolve()
 }

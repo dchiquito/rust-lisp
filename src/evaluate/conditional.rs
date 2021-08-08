@@ -54,11 +54,11 @@ fn _cond(
   if let Some(else_clause) = else_clause {
     let else_clause = arg_vec(&else_clause)?;
     let mut else_body = else_clause[1..].iter();
-    let mut expression = evaluate(else_body.next().unwrap(), scope.clone())?;
+    let mut expression = evaluate_in_tail_position(else_body.next().unwrap(), scope.clone())?;
     while let Some(next_expression) = else_body.next() {
-      expression = evaluate(&next_expression, scope.clone())?;
+      expression = evaluate_in_tail_position(&next_expression, scope.clone())?;
     }
-    Ok(ProcedureValue::Expression(expression))
+    Ok(expression)
   } else {
     Ok(ProcedureValue::Expression(void!()))
   }
