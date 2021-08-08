@@ -4,7 +4,7 @@ fn _cond(
   _args: Vec<Expression>,
   mut varargs: Vec<Expression>,
   scope: Rc<RefCell<Scope>>,
-) -> EvaluationResult {
+) -> ProcedureResult {
   // Validate all of the clauses before evaluating anything
   // All clauses must be non-empty lists
   for clause in &varargs {
@@ -48,7 +48,7 @@ fn _cond(
       for line in expressions {
         expression = evaluate(line, scope.clone())?;
       }
-      return Ok(expression);
+      return Ok(ProcedureValue::Expression(expression));
     }
   }
   if let Some(else_clause) = else_clause {
@@ -58,9 +58,9 @@ fn _cond(
     while let Some(next_expression) = else_body.next() {
       expression = evaluate(&next_expression, scope.clone())?;
     }
-    Ok(expression)
+    Ok(ProcedureValue::Expression(expression))
   } else {
-    Ok(void!())
+    Ok(ProcedureValue::Expression(void!()))
   }
 }
 

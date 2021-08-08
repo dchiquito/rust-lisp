@@ -1,7 +1,7 @@
 use super::*;
 
-fn _quote(args: Vec<Expression>, _scope: Rc<RefCell<Scope>>) -> EvaluationResult {
-  Ok(args.get(0).unwrap().clone())
+fn _quote(args: Vec<Expression>, _scope: Rc<RefCell<Scope>>) -> ProcedureResult {
+  Ok(ProcedureValue::Expression(args.get(0).unwrap().clone()))
 }
 
 pub const QUOTE: Expression = Expression::Procedure(Procedure::BuiltinFixedArgumentForm(_quote, 1));

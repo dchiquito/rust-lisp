@@ -6,7 +6,7 @@ fn _add(
   args: Vec<Expression>,
   varargs: Vec<Expression>,
   scope: Rc<RefCell<Scope>>,
-) -> EvaluationResult {
+) -> ProcedureResult {
   if let Expression::Number(Number::Integer(mut sum)) =
     evaluate(args.get(0).unwrap(), scope.clone())?
   {
@@ -17,7 +17,7 @@ fn _add(
         return Err(EvaluationError::InvalidArgument);
       }
     }
-    Ok(int!(sum))
+    Ok(ProcedureValue::Expression(int!(sum)))
   } else {
     Err(EvaluationError::InvalidArgument)
   }
@@ -29,7 +29,7 @@ pub fn _multiply(
   args: Vec<Expression>,
   varargs: Vec<Expression>,
   scope: Rc<RefCell<Scope>>,
-) -> EvaluationResult {
+) -> ProcedureResult {
   if let Expression::Number(Number::Integer(mut product)) =
     evaluate(args.get(0).unwrap(), scope.clone())?
   {
@@ -40,7 +40,7 @@ pub fn _multiply(
         return Err(EvaluationError::InvalidArgument);
       }
     }
-    Ok(int!(product))
+    Ok(ProcedureValue::Expression(int!(product)))
   } else {
     Err(EvaluationError::InvalidArgument)
   }
@@ -53,12 +53,12 @@ pub fn _subtract(
   args: Vec<Expression>,
   varargs: Vec<Expression>,
   scope: Rc<RefCell<Scope>>,
-) -> EvaluationResult {
+) -> ProcedureResult {
   if let Expression::Number(Number::Integer(mut negation)) =
     evaluate(args.get(0).unwrap(), scope.clone())?
   {
     if varargs.len() == 0 {
-      Ok(int!(-negation))
+      Ok(ProcedureValue::Expression(int!(-negation)))
     } else {
       for arg in varargs {
         if let Expression::Number(Number::Integer(integer)) = evaluate(&arg, scope.clone())? {
@@ -67,7 +67,7 @@ pub fn _subtract(
           return Err(EvaluationError::InvalidArgument);
         }
       }
-      Ok(int!(negation))
+      Ok(ProcedureValue::Expression(int!(negation)))
     }
   } else {
     Err(EvaluationError::InvalidArgument)
@@ -81,7 +81,7 @@ pub fn _divide(
   args: Vec<Expression>,
   varargs: Vec<Expression>,
   scope: Rc<RefCell<Scope>>,
-) -> EvaluationResult {
+) -> ProcedureResult {
   if let Expression::Number(Number::Integer(mut quotient)) =
     evaluate(args.get(0).unwrap(), scope.clone())?
   {
@@ -89,7 +89,7 @@ pub fn _divide(
       if quotient == 0 {
         Err(EvaluationError::DivideByZero)
       } else {
-        Ok(int!(1 / quotient))
+        Ok(ProcedureValue::Expression(int!(1 / quotient)))
       }
     } else {
       for arg in varargs {
@@ -102,7 +102,7 @@ pub fn _divide(
           return Err(EvaluationError::InvalidArgument);
         }
       }
-      Ok(int!(quotient))
+      Ok(ProcedureValue::Expression(int!(quotient)))
     }
   } else {
     Err(EvaluationError::InvalidArgument)

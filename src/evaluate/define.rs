@@ -1,11 +1,11 @@
 use super::*;
 
-fn _define(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> EvaluationResult {
+fn _define(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> ProcedureResult {
   let symbol = args.get(0).unwrap();
   let expression = evaluate(&args.get(1).unwrap(), scope.clone())?;
   if let Expression::Symbol(symbol) = symbol {
     scope.borrow_mut().define(symbol, expression.clone());
-    Ok(expression)
+    Ok(ProcedureValue::Expression(expression))
   } else {
     Err(EvaluationError::InvalidArgument)
   }

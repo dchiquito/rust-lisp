@@ -16,7 +16,7 @@ fn _lambda(
   args: Vec<Expression>,
   varargs: Vec<Expression>,
   _scope: Rc<RefCell<Scope>>,
-) -> EvaluationResult {
+) -> ProcedureResult {
   let mut formals = args.get(0).unwrap();
   // lambda requires two arguments: the formals, and at least one statement in the body.
   // We will graft that required statement onto the beginning of varargs to build to the statement list.
@@ -24,7 +24,11 @@ fn _lambda(
   let mut body = varargs;
   body.insert(0, first_statement.clone());
   match formals {
-    Expression::Symbol(symbol) => Ok(procedure!(vec![], symbol.clone(), body)),
+    Expression::Symbol(symbol) => Ok(ProcedureValue::Expression(procedure!(
+      vec![],
+      symbol.clone(),
+      body
+    ))),
     Expression::Cons(_) => {
       let mut args = vec![];
       while let Expression::Cons(cons) = formals {
@@ -38,12 +42,16 @@ fn _lambda(
       if formals != &null!() {
         // Variable argument forms are encoded using an improper list as the lambda arguments
         if let Expression::Symbol(symbol) = formals {
-          Ok(procedure!(args, symbol.clone(), body))
+          Ok(ProcedureValue::Expression(procedure!(
+            args,
+            symbol.clone(),
+            body
+          )))
         } else {
           Err(EvaluationError::InvalidArgument)
         }
       } else {
-        Ok(procedure!(args, body))
+        Ok(ProcedureValue::Expression(procedure!(args, body)))
       }
     }
     _ => Err(EvaluationError::InvalidArgument),

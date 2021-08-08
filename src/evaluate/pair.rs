@@ -1,26 +1,26 @@
 use super::*;
 
-fn _cons(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> EvaluationResult {
+fn _cons(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> ProcedureResult {
   let left = evaluate(args.get(0).unwrap(), scope.clone())?;
   let right = evaluate(args.get(1).unwrap(), scope.clone())?;
-  Ok(cons!(&left, &right))
+  Ok(ProcedureValue::Expression(cons!(&left, &right)))
 }
 pub const CONS: Expression = Expression::Procedure(Procedure::BuiltinFixedArgumentForm(_cons, 2));
 
-fn _car(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> EvaluationResult {
+fn _car(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> ProcedureResult {
   let arg = evaluate(args.get(0).unwrap(), scope.clone())?;
   if let Expression::Cons(cons) = arg {
-    Ok(cons.car.as_ref().clone())
+    Ok(ProcedureValue::Expression(cons.car.as_ref().clone()))
   } else {
     Err(EvaluationError::InvalidArgument)
   }
 }
 pub const CAR: Expression = Expression::Procedure(Procedure::BuiltinFixedArgumentForm(_car, 1));
 
-fn _cdr(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> EvaluationResult {
+fn _cdr(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> ProcedureResult {
   let arg = evaluate(args.get(0).unwrap(), scope.clone())?;
   if let Expression::Cons(cons) = arg {
-    Ok(cons.cdr.as_ref().clone())
+    Ok(ProcedureValue::Expression(cons.cdr.as_ref().clone()))
   } else {
     Err(EvaluationError::InvalidArgument)
   }

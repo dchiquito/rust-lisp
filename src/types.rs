@@ -1,4 +1,4 @@
-use crate::evaluate::EvaluationResult;
+use crate::evaluate::ProcedureResult;
 use crate::Scope;
 use std::cell::RefCell;
 use std::fmt;
@@ -73,11 +73,11 @@ pub enum Procedure {
   FixedArgumentForm(Vec<String>, Vec<Expression>),
   VariableArgumentForm(Vec<String>, String, Vec<Expression>),
   BuiltinFixedArgumentForm(
-    fn(Vec<Expression>, Rc<RefCell<Scope>>) -> EvaluationResult,
+    fn(Vec<Expression>, Rc<RefCell<Scope>>) -> ProcedureResult,
     usize,
   ),
   BuiltinVariableArgumentForm(
-    fn(Vec<Expression>, Vec<Expression>, Rc<RefCell<Scope>>) -> EvaluationResult,
+    fn(Vec<Expression>, Vec<Expression>, Rc<RefCell<Scope>>) -> ProcedureResult,
     usize,
   ),
 }

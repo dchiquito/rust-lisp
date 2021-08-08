@@ -1,9 +1,9 @@
 use super::*;
 
-fn _eq(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> EvaluationResult {
+fn _eq(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> ProcedureResult {
   let a = evaluate(args.get(0).unwrap(), scope.clone())?;
   let b = evaluate(args.get(1).unwrap(), scope.clone())?;
-  Ok(boolean!(a == b))
+  Ok(ProcedureValue::Expression(boolean!(a == b)))
 }
 
 pub const EQ: Expression = Expression::Procedure(Procedure::BuiltinFixedArgumentForm(_eq, 2));
