@@ -2,7 +2,7 @@ use super::*;
 use crate::evaluate::{define_builtins, EvaluationError, EvaluationResult};
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Scope {
   global: Option<Rc<RefCell<Scope>>>,
   mapping: HashMap<String, Expression>,
@@ -10,10 +10,7 @@ pub struct Scope {
 
 impl Scope {
   pub fn new() -> Scope {
-    Scope {
-      global: None,
-      mapping: HashMap::new(),
-    }
+    Scope::default()
   }
   pub fn child(parent: Rc<RefCell<Scope>>) -> Rc<RefCell<Scope>> {
     let mut scope = Scope::new();

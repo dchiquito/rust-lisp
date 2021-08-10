@@ -34,13 +34,11 @@ fn parse_expression(string: &str) -> (ParseResult, String) {
         fn is_digit(c: char) -> bool {
           c.is_digit(10)
         }
-        if token.chars().all(is_digit) {
-          // non-negative integers are all digits
-          (Ok(int!(token.parse().unwrap())), remainder)
-        } else if token.chars().next() == Some('-')
-          && token.len() > 1
-          && token.chars().skip(1).all(is_digit)
+        if (token.chars().all(is_digit)) || (token.starts_with('-')
+        && token.len() > 1
+        && token.chars().skip(1).all(is_digit))
         {
+          // non-negative integers are all digits
           // negative numbers are also allowed
           (Ok(int!(token.parse().unwrap())), remainder)
         } else if token == "#t" || token == "#true" {

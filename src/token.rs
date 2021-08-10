@@ -1,5 +1,5 @@
 pub fn pop_token(string: &str) -> (Option<String>, String) {
-  if string.len() <= 0 {
+  if string.is_empty() {
     return (None, String::new());
   }
   let first_char = string.chars().next().unwrap();
@@ -12,7 +12,7 @@ pub fn pop_token(string: &str) -> (Option<String>, String) {
     '(' | ')' | '\'' => (Some(String::from(first_char)), String::from(remainder)),
     _ => {
       let mut symbol = String::from(first_char);
-      while remainder.len() > 0 {
+      while !remainder.is_empty() {
         let next_char = remainder.chars().next().unwrap();
         if (next_char == '(') | (next_char == ')') | next_char.is_whitespace() {
           return (Some(symbol), String::from(remainder));

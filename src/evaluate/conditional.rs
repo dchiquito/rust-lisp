@@ -55,8 +55,8 @@ fn _cond(
     let else_clause = arg_vec(&else_clause)?;
     let mut else_body = else_clause[1..].iter();
     let mut expression = evaluate_in_tail_position(else_body.next().unwrap(), scope.clone())?;
-    while let Some(next_expression) = else_body.next() {
-      expression = evaluate_in_tail_position(&next_expression, scope.clone())?;
+    for next_expression in else_body {
+      expression = evaluate_in_tail_position(next_expression, scope.clone())?;
     }
     Ok(expression)
   } else {

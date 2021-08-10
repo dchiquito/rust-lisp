@@ -76,7 +76,7 @@ pub fn define_builtins(scope: Rc<RefCell<Scope>>) {
 }
 
 /// Evaluate all the lines in the body, and return the last result
-fn _evaluate_procedure_body(body: &Vec<Expression>, scope: Rc<RefCell<Scope>>) -> ProcedureResult {
+fn _evaluate_procedure_body(body: &[Expression], scope: Rc<RefCell<Scope>>) -> ProcedureResult {
   // let last_line = body.pop().unwrap();
 
   let mut body = body.iter();
@@ -126,7 +126,7 @@ fn _evaluate_procedure(
       }
       inner_scope
         .borrow_mut()
-        .define(&vararg_name, vec_arg(evaluated_varargs)?);
+        .define(vararg_name, vec_arg(evaluated_varargs)?);
       _evaluate_procedure_body(body, inner_scope)
     }
     Procedure::BuiltinFixedArgumentForm(builtin, argc) => {
@@ -176,7 +176,7 @@ pub fn evaluate_in_tail_position(
         Ok(ProcedureValue::TailCall(
           procedure,
           cons.cdr.as_ref().clone(),
-          scope.clone(),
+          scope,
         ))
       }
       _ => Err(EvaluationError::NotAProcedure),
@@ -186,5 +186,5 @@ pub fn evaluate_in_tail_position(
 }
 
 pub fn evaluate(expression: &Expression, scope: Rc<RefCell<Scope>>) -> EvaluationResult {
-  evaluate_in_tail_position(expression, scope.clone())?.resolve()
+  evaluate_in_tail_position(expression, scope)?.resolve()
 }

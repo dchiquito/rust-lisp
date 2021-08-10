@@ -2,13 +2,13 @@ use super::*;
 
 fn _cons(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> ProcedureResult {
   let left = evaluate(args.get(0).unwrap(), scope.clone())?;
-  let right = evaluate(args.get(1).unwrap(), scope.clone())?;
+  let right = evaluate(args.get(1).unwrap(), scope)?;
   Ok(ProcedureValue::Expression(cons!(&left, &right)))
 }
 pub const CONS: Expression = Expression::Procedure(Procedure::BuiltinFixedArgumentForm(_cons, 2));
 
 fn _car(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> ProcedureResult {
-  let arg = evaluate(args.get(0).unwrap(), scope.clone())?;
+  let arg = evaluate(args.get(0).unwrap(), scope)?;
   if let Expression::Cons(cons) = arg {
     Ok(ProcedureValue::Expression(cons.car.as_ref().clone()))
   } else {
@@ -18,7 +18,7 @@ fn _car(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> ProcedureResult {
 pub const CAR: Expression = Expression::Procedure(Procedure::BuiltinFixedArgumentForm(_car, 1));
 
 fn _cdr(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> ProcedureResult {
-  let arg = evaluate(args.get(0).unwrap(), scope.clone())?;
+  let arg = evaluate(args.get(0).unwrap(), scope)?;
   if let Expression::Cons(cons) = arg {
     Ok(ProcedureValue::Expression(cons.cdr.as_ref().clone()))
   } else {

@@ -57,7 +57,7 @@ pub fn _subtract(
   if let Expression::Number(Number::Integer(mut negation)) =
     evaluate(args.get(0).unwrap(), scope.clone())?
   {
-    if varargs.len() == 0 {
+    if varargs.is_empty() {
       Ok(ProcedureValue::Expression(int!(-negation)))
     } else {
       for arg in varargs {
@@ -85,7 +85,7 @@ pub fn _divide(
   if let Expression::Number(Number::Integer(mut quotient)) =
     evaluate(args.get(0).unwrap(), scope.clone())?
   {
-    if varargs.len() == 0 {
+    if varargs.is_empty() {
       if quotient == 0 {
         Err(EvaluationError::DivideByZero)
       } else {

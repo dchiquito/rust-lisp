@@ -76,6 +76,7 @@ pub enum Procedure {
     fn(Vec<Expression>, Rc<RefCell<Scope>>) -> ProcedureResult,
     usize,
   ),
+  #[allow(clippy::type_complexity)]
   BuiltinVariableArgumentForm(
     fn(Vec<Expression>, Vec<Expression>, Rc<RefCell<Scope>>) -> ProcedureResult,
     usize,
@@ -140,14 +141,14 @@ impl Expression {
       Expression::Number(number) => format!("{}", number),
       Expression::Boolean(boolean) => {
         if *boolean {
-          format!("#t")
+          "#t".to_string()
         } else {
-          format!("#f")
+          "#f".to_string()
         }
       }
-      Expression::Procedure(_) => format!("#<procedure>"),
-      Expression::Null => format!("'()"),
-      Expression::Void => format!("#<void>"),
+      Expression::Procedure(_) => "#<procedure>".to_string(),
+      Expression::Null => "'()".to_string(),
+      Expression::Void => "#<void>".to_string(),
     }
   }
 }
