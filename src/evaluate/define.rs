@@ -4,8 +4,8 @@ fn _define(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> ProcedureResult 
   let symbol = args.get(0).unwrap();
   let expression = evaluate(args.get(1).unwrap(), scope.clone())?;
   if let Expression::Symbol(symbol) = symbol {
-    scope.borrow_mut().define(symbol, expression.clone());
-    Ok(ProcedureValue::Expression(expression))
+    scope.borrow_mut().define(symbol, expression);
+    Ok(ProcedureValue::Expression(void!()))
   } else {
     Err(EvaluationError::InvalidArgument)
   }
@@ -23,7 +23,7 @@ mod test {
     let scope = Scope::builtins();
     assert_eq!(
       evaluate(&parse("(define foo 1)").unwrap(), scope.clone()),
-      Ok(int!(1))
+      Ok(void!())
     );
     assert_eq!(scope.borrow().lookup(&String::from("foo")), Ok(int!(1)));
     assert_eq!(evaluate(&parse("foo").unwrap(), scope.clone()), Ok(int!(1)))

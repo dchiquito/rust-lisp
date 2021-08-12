@@ -1,16 +1,24 @@
 mod evaluate;
+mod exec;
 mod parse;
 mod scope;
 mod token;
 mod types;
-mod repl;
 
 pub use crate::evaluate::{define_builtins, evaluate};
 pub use crate::parse::parse;
 pub use crate::scope::Scope;
 pub use crate::types::*;
+use std::env::args;
 use std::io;
 
 fn main() -> io::Result<()> {
-    crate::repl::repl()
+    let mut args = args();
+    // Who cares about the first arg
+    args.next();
+    if let Some(filename) = args.next() {
+        crate::exec::exec_file(&filename)
+    } else {
+        crate::exec::repl()
+    }
 }

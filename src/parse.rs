@@ -9,7 +9,7 @@ pub enum ParseError {
 }
 pub type ParseResult = Result<Expression, ParseError>;
 
-fn parse_expression(string: &str) -> (ParseResult, String) {
+pub fn parse_expression(string: &str) -> (ParseResult, String) {
   match pop_token(string) {
     (None, remainder) => (Err(ParseError::UnexpectedEOF), remainder),
     (Some(token), remainder) => match &token as &str {
@@ -34,9 +34,8 @@ fn parse_expression(string: &str) -> (ParseResult, String) {
         fn is_digit(c: char) -> bool {
           c.is_digit(10)
         }
-        if (token.chars().all(is_digit)) || (token.starts_with('-')
-        && token.len() > 1
-        && token.chars().skip(1).all(is_digit))
+        if (token.chars().all(is_digit))
+          || (token.starts_with('-') && token.len() > 1 && token.chars().skip(1).all(is_digit))
         {
           // non-negative integers are all digits
           // negative numbers are also allowed
