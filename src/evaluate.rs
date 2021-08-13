@@ -1,7 +1,7 @@
 mod arithmetic;
-mod comparison;
 mod conditional;
 mod define;
+mod equality;
 mod lambda;
 mod pair;
 mod quote;
@@ -65,7 +65,7 @@ pub fn define_builtins(scope: Rc<RefCell<Scope>>) {
   scope.define("*", arithmetic::MULTIPLY);
   scope.define("-", arithmetic::SUBTRACT);
   scope.define("/", arithmetic::DIVIDE);
-  scope.define("eq?", comparison::EQ);
+  scope.define("eq?", equality::EQ);
   scope.define("quote", quote::QUOTE);
   scope.define("cons", pair::CONS);
   scope.define("car", pair::CAR);
