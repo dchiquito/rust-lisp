@@ -68,6 +68,10 @@ pub fn define_builtins(scope: Rc<RefCell<Scope>>) {
   scope.define("/", arithmetic::DIVIDE);
   scope.define("eq?", equality::EQ);
   scope.define("=", comparison::EQUALS);
+  scope.define("<", comparison::LESS_THAN);
+  scope.define(">", comparison::GREATER_THAN);
+  scope.define("<=", comparison::LESS_THAN_OR_EQUAL);
+  scope.define(">=", comparison::GREATER_THAN_OR_EQUAL);
   scope.define("quote", quote::QUOTE);
   scope.define("cons", pair::CONS);
   scope.define("car", pair::CAR);

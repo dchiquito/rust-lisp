@@ -55,7 +55,7 @@ impl fmt::Debug for Cons {
   }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Number {
   Integer(i32),
 }
