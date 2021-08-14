@@ -88,7 +88,7 @@ pub fn _divide(
   {
     if varargs.is_empty() {
       if quotient == 0 {
-        Err(EvaluationError::DivideByZero)
+        Err(EvaluationError::DivideByZero(Number::Integer(1)))
       } else {
         Ok(ProcedureValue::Expression(int!(1 / quotient)))
       }
@@ -96,7 +96,7 @@ pub fn _divide(
       for arg in varargs {
         if let Expression::Number(Number::Integer(integer)) = evaluate(&arg, scope.clone())? {
           if integer == 0 {
-            return Err(EvaluationError::DivideByZero);
+            return Err(EvaluationError::DivideByZero(Number::Integer(quotient)));
           }
           quotient /= integer;
         } else {
@@ -302,11 +302,11 @@ mod test {
     );
     assert_eq!(
       evaluate(&parse("(/ 0)").unwrap(), scope.clone()),
-      Err(EvaluationError::DivideByZero)
+      Err(EvaluationError::DivideByZero(Number::Integer(1)))
     );
     assert_eq!(
-      evaluate(&parse("(/ 1 0)").unwrap(), scope.clone()),
-      Err(EvaluationError::DivideByZero)
+      evaluate(&parse("(/ 3 0)").unwrap(), scope.clone()),
+      Err(EvaluationError::DivideByZero(Number::Integer(3)))
     );
     assert_eq!(
       evaluate(&parse("(/ (/ 100 2) (/ 15 3))").unwrap(), scope.clone()),

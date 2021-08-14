@@ -18,7 +18,7 @@ pub enum EvaluationError {
   WrongNumberOfVariableArguments(String, usize, usize),
   InvalidArgument,
   UndefinedSymbol,
-  DivideByZero,
+  DivideByZero(Number),
   NotAProcedure,
 }
 impl fmt::Display for EvaluationError {
@@ -37,6 +37,9 @@ impl fmt::Display for EvaluationError {
           "wrong number of arguments for {}: expected {} or more, got {}",
           procedure_name, expected, actual
         )
+      }
+      EvaluationError::DivideByZero(quotient) => {
+        write!(fmt, "attempted to divide {} by 0", quotient)
       }
       err => {
         write!(fmt, "{:?}", err)
