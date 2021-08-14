@@ -1,8 +1,8 @@
 use super::*;
-use std::cell::RefCell;
-use std::rc::Rc;
 use crate::evaluate::{define_builtins, EvaluationError, EvaluationResult};
+use std::cell::RefCell;
 use std::collections::HashMap;
+use std::rc::Rc;
 
 #[derive(Debug, Default)]
 pub struct Scope {
@@ -38,7 +38,7 @@ impl Scope {
         if let Some(global) = &self.global {
           global.borrow().lookup(symbol)
         } else {
-          Err(EvaluationError::UndefinedSymbol)
+          Err(EvaluationError::UndefinedSymbol(symbol.to_string()))
         }
       }
     }
