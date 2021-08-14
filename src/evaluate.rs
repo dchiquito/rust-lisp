@@ -14,8 +14,8 @@ use std::rc::Rc;
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum EvaluationError {
-  WrongNumberOfArguments(usize, usize),
-  WrongNumberOfVariableArguments(usize, usize),
+  WrongNumberOfArguments(String, usize, usize),
+  WrongNumberOfVariableArguments(String, usize, usize),
   InvalidArgument,
   UndefinedSymbol,
   DivideByZero,
@@ -24,18 +24,18 @@ pub enum EvaluationError {
 impl fmt::Display for EvaluationError {
   fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
     match self {
-      EvaluationError::WrongNumberOfArguments(expected, actual) => {
+      EvaluationError::WrongNumberOfArguments(procedure_name, expected, actual) => {
         write!(
           fmt,
-          "wrong number of arguments: expected {}, got {}",
-          expected, actual
+          "wrong number of arguments for {}: expected {}, got {}",
+          procedure_name, expected, actual
         )
       }
-      EvaluationError::WrongNumberOfVariableArguments(expected, actual) => {
+      EvaluationError::WrongNumberOfVariableArguments(procedure_name, expected, actual) => {
         write!(
           fmt,
-          "wrong number of arguments: expected {} or more, got {}",
-          expected, actual
+          "wrong number of arguments for {}: expected {} or more, got {}",
+          procedure_name, expected, actual
         )
       }
       err => {
@@ -127,6 +127,7 @@ fn _evaluate_procedure(
     Procedure::FixedArgumentForm(arg_names, body) => {
       if args.len() != arg_names.len() {
         return Err(EvaluationError::WrongNumberOfArguments(
+          "#<procedure>".to_string(),
           arg_names.len(),
           args.len(),
         ));
@@ -143,6 +144,7 @@ fn _evaluate_procedure(
     Procedure::VariableArgumentForm(arg_names, vararg_name, body) => {
       if args.len() < arg_names.len() {
         return Err(EvaluationError::WrongNumberOfVariableArguments(
+          "#<procedure>".to_string(),
           arg_names.len(),
           args.len(),
         ));
@@ -165,15 +167,20 @@ fn _evaluate_procedure(
         .define(vararg_name, vec_arg(evaluated_varargs)?);
       _evaluate_procedure_body(body, inner_scope)
     }
-    Procedure::BuiltinFixedArgumentForm(_procedure_name, builtin, argc) => {
+    Procedure::BuiltinFixedArgumentForm(procedure_name, builtin, argc) => {
       if args.len() != *argc {
-        return Err(EvaluationError::WrongNumberOfArguments(*argc, args.len()));
+        return Err(EvaluationError::WrongNumberOfArguments(
+          procedure_name.to_string(),
+          *argc,
+          args.len(),
+        ));
       }
       builtin(args, scope)
     }
-    Procedure::BuiltinVariableArgumentForm(_procedure_name, builtin, argc) => {
+    Procedure::BuiltinVariableArgumentForm(procedure_name, builtin, argc) => {
       if args.len() < *argc {
         return Err(EvaluationError::WrongNumberOfVariableArguments(
+          procedure_name.to_string(),
           *argc,
           args.len(),
         ));

@@ -147,7 +147,11 @@ mod test {
     );
     assert_eq!(
       evaluate(&parse("(+)").unwrap(), scope.clone()),
-      Err(EvaluationError::WrongNumberOfVariableArguments(1, 0))
+      Err(EvaluationError::WrongNumberOfVariableArguments(
+        "+".to_string(),
+        1,
+        0
+      ))
     );
     assert_eq!(
       evaluate(&parse("(+ ())").unwrap(), scope.clone()),
@@ -192,7 +196,11 @@ mod test {
     );
     assert_eq!(
       evaluate(&parse("(*)").unwrap(), scope.clone()),
-      Err(EvaluationError::WrongNumberOfVariableArguments(1, 0))
+      Err(EvaluationError::WrongNumberOfVariableArguments(
+        "*".to_string(),
+        1,
+        0
+      ))
     );
     assert_eq!(
       evaluate(&parse("(* ())").unwrap(), scope.clone()),
@@ -237,7 +245,11 @@ mod test {
     );
     assert_eq!(
       evaluate(&parse("(-)").unwrap(), scope.clone()),
-      Err(EvaluationError::WrongNumberOfVariableArguments(1, 0))
+      Err(EvaluationError::WrongNumberOfVariableArguments(
+        "-".to_string(),
+        1,
+        0
+      ))
     );
     assert_eq!(
       evaluate(&parse("(- ())").unwrap(), scope.clone()),
@@ -301,17 +313,21 @@ mod test {
       Ok(int!(10))
     );
     assert_eq!(
-      evaluate(&parse("(-)").unwrap(), scope.clone()),
-      Err(EvaluationError::WrongNumberOfVariableArguments(1, 0))
+      evaluate(&parse("(/)").unwrap(), scope.clone()),
+      Err(EvaluationError::WrongNumberOfVariableArguments(
+        "/".to_string(),
+        1,
+        0
+      ))
     );
     assert_eq!(
-      evaluate(&parse("(- ())").unwrap(), scope.clone()),
+      evaluate(&parse("(/ ())").unwrap(), scope.clone()),
       Err(EvaluationError::InvalidArgument)
     );
     // Test an improper list
     assert_eq!(
       evaluate(
-        &cons!(&symbol!("-"), &cons!(&int!(1), &int!(2))),
+        &cons!(&symbol!("/"), &cons!(&int!(1), &int!(2))),
         scope.clone()
       ),
       Err(EvaluationError::InvalidArgument)
