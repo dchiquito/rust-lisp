@@ -117,7 +117,7 @@ mod test {
         );
         assert_eq!(
             evaluate(&parse("(=)").unwrap(), scope.clone()),
-            Err(EvaluationError::WrongNumberOfArguments)
+            Err(EvaluationError::WrongNumberOfVariableArguments(1, 0))
         );
         assert_eq!(
             evaluate(&parse("(= 'foo)").unwrap(), scope.clone()),
@@ -158,7 +158,7 @@ mod test {
         );
         assert_eq!(
             evaluate(&parse("(<)").unwrap(), scope.clone()),
-            Err(EvaluationError::WrongNumberOfArguments)
+            Err(EvaluationError::WrongNumberOfVariableArguments(1, 0))
         );
         assert_eq!(
             evaluate(&parse("(< 'foo)").unwrap(), scope.clone()),
@@ -199,7 +199,7 @@ mod test {
         );
         assert_eq!(
             evaluate(&parse("(>)").unwrap(), scope.clone()),
-            Err(EvaluationError::WrongNumberOfArguments)
+            Err(EvaluationError::WrongNumberOfVariableArguments(1, 0))
         );
         assert_eq!(
             evaluate(&parse("(> 'foo)").unwrap(), scope.clone()),
@@ -244,7 +244,7 @@ mod test {
         );
         assert_eq!(
             evaluate(&parse("(<=)").unwrap(), scope.clone()),
-            Err(EvaluationError::WrongNumberOfArguments)
+            Err(EvaluationError::WrongNumberOfVariableArguments(1, 0))
         );
         assert_eq!(
             evaluate(&parse("(<= 'foo)").unwrap(), scope.clone()),
@@ -289,7 +289,7 @@ mod test {
         );
         assert_eq!(
             evaluate(&parse("(>=)").unwrap(), scope.clone()),
-            Err(EvaluationError::WrongNumberOfArguments)
+            Err(EvaluationError::WrongNumberOfVariableArguments(1, 0))
         );
         assert_eq!(
             evaluate(&parse("(>= 'foo)").unwrap(), scope.clone()),

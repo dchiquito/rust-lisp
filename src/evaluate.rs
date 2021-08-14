@@ -9,16 +9,40 @@ mod quote;
 
 use crate::*;
 use std::cell::RefCell;
+use std::fmt;
 use std::rc::Rc;
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum EvaluationError {
-  UnknownFunctionName,
-  WrongNumberOfArguments,
+  WrongNumberOfArguments(usize, usize),
+  WrongNumberOfVariableArguments(usize, usize),
   InvalidArgument,
   UndefinedSymbol,
   DivideByZero,
   NotAProcedure,
+}
+impl fmt::Display for EvaluationError {
+  fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    match self {
+      EvaluationError::WrongNumberOfArguments(expected, actual) => {
+        write!(
+          fmt,
+          "wrong number of arguments: expected {}, got {}",
+          expected, actual
+        )
+      }
+      EvaluationError::WrongNumberOfVariableArguments(expected, actual) => {
+        write!(
+          fmt,
+          "wrong number of arguments: expected {} or more, got {}",
+          expected, actual
+        )
+      }
+      err => {
+        write!(fmt, "{:?}", err)
+      }
+    }
+  }
 }
 pub type EvaluationResult = Result<Expression, EvaluationError>;
 
@@ -102,7 +126,10 @@ fn _evaluate_procedure(
   match &procedure {
     Procedure::FixedArgumentForm(arg_names, body) => {
       if args.len() != arg_names.len() {
-        return Err(EvaluationError::WrongNumberOfArguments);
+        return Err(EvaluationError::WrongNumberOfArguments(
+          arg_names.len(),
+          args.len(),
+        ));
       }
       // Bind the arguments to their symbols
       let inner_scope = Scope::child(scope.clone());
@@ -115,7 +142,10 @@ fn _evaluate_procedure(
     }
     Procedure::VariableArgumentForm(arg_names, vararg_name, body) => {
       if args.len() < arg_names.len() {
-        return Err(EvaluationError::WrongNumberOfArguments);
+        return Err(EvaluationError::WrongNumberOfVariableArguments(
+          arg_names.len(),
+          args.len(),
+        ));
       }
       // Bind the arguments to their symbols
       let inner_scope = Scope::child(scope.clone());
@@ -137,13 +167,16 @@ fn _evaluate_procedure(
     }
     Procedure::BuiltinFixedArgumentForm(builtin, argc) => {
       if args.len() != *argc {
-        return Err(EvaluationError::WrongNumberOfArguments);
+        return Err(EvaluationError::WrongNumberOfArguments(*argc, args.len()));
       }
       builtin(args, scope)
     }
     Procedure::BuiltinVariableArgumentForm(builtin, argc) => {
       if args.len() < *argc {
-        return Err(EvaluationError::WrongNumberOfArguments);
+        return Err(EvaluationError::WrongNumberOfVariableArguments(
+          *argc,
+          args.len(),
+        ));
       }
       let varargs = args[*argc..].to_vec();
       let args = args[0..*argc].to_vec();

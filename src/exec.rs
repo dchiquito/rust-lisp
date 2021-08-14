@@ -27,7 +27,7 @@ pub fn exec_file(filename: &str) -> io::Result<()> {
                 let evaluation = match evaluate(&input_expression, scope.clone()) {
                     Ok(expression) => expression,
                     Err(err) => {
-                        println!("Error evaluating input: {:?}", err);
+                        println!("Error evaluating input: {}", err);
                         return Ok(());
                     }
                 };
@@ -66,7 +66,7 @@ pub fn repl() -> io::Result<()> {
         let evaluation = match evaluate(&input_expression, scope.clone()) {
             Ok(expression) => expression,
             Err(err) => {
-                println!("Error evaluating input: {:?}", err);
+                println!("Error evaluating input: {}", err);
                 continue;
             }
         };
