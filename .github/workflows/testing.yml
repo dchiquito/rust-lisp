@@ -12,7 +12,7 @@ jobs:
             toolchain: stable
             components: clippy
             override: true
-      - name: Run cargo test
+      - name: Run cargo clippy
         uses: actions-rs/cargo@v1
         with:
           command: clippy
