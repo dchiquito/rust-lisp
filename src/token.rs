@@ -19,14 +19,6 @@ fn consume_non_tokens(string: &str) -> (Option<char>, String) {
 }
 
 pub fn pop_token(string: &str) -> (Option<String>, String) {
-  // let first_char = string.chars().next().unwrap();
-  // let mut remainder = string.get(1..).unwrap();
-  // if first_char.is_whitespace() {
-  //   return pop_token(remainder);
-  // }
-  // let mut string = consume_non_tokens(string).chars();
-  // let mut first_char = string.next().unwrap();
-  // let mut remainder: &str = &string.collect::<String>();
   if let (Some(first_char), mut remainder) = consume_non_tokens(string) {
     match first_char {
       '(' | ')' | '\'' => (Some(String::from(first_char)), remainder),
