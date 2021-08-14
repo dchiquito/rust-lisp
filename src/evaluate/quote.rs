@@ -4,7 +4,8 @@ fn _quote(args: Vec<Expression>, _scope: Rc<RefCell<Scope>>) -> ProcedureResult 
   Ok(ProcedureValue::Expression(args.get(0).unwrap().clone()))
 }
 
-pub const QUOTE: Expression = Expression::Procedure(Procedure::BuiltinFixedArgumentForm(_quote, 1));
+pub const QUOTE: Expression =
+  Expression::Procedure(Procedure::BuiltinFixedArgumentForm("quote", _quote, 1));
 
 #[cfg(test)]
 mod test {

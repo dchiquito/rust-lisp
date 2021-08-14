@@ -65,7 +65,7 @@ fn _cond(
 }
 
 pub const COND: Expression =
-  Expression::Procedure(Procedure::BuiltinVariableArgumentForm(_cond, 0));
+  Expression::Procedure(Procedure::BuiltinVariableArgumentForm("cond", _cond, 0));
 
 #[cfg(test)]
 mod test {

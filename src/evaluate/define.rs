@@ -11,7 +11,7 @@ fn _define(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> ProcedureResult 
   }
 }
 pub const DEFINE: Expression =
-  Expression::Procedure(Procedure::BuiltinFixedArgumentForm(_define, 2));
+  Expression::Procedure(Procedure::BuiltinFixedArgumentForm("define", _define, 2));
 
 #[cfg(test)]
 mod test {

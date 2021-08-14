@@ -23,7 +23,8 @@ fn _add(
   }
 }
 
-pub const ADD: Expression = Expression::Procedure(Procedure::BuiltinVariableArgumentForm(_add, 1));
+pub const ADD: Expression =
+  Expression::Procedure(Procedure::BuiltinVariableArgumentForm("+", _add, 1));
 
 pub fn _multiply(
   args: Vec<Expression>,
@@ -47,7 +48,7 @@ pub fn _multiply(
 }
 
 pub const MULTIPLY: Expression =
-  Expression::Procedure(Procedure::BuiltinVariableArgumentForm(_multiply, 1));
+  Expression::Procedure(Procedure::BuiltinVariableArgumentForm("*", _multiply, 1));
 
 pub fn _subtract(
   args: Vec<Expression>,
@@ -75,7 +76,7 @@ pub fn _subtract(
 }
 
 pub const SUBTRACT: Expression =
-  Expression::Procedure(Procedure::BuiltinVariableArgumentForm(_subtract, 1));
+  Expression::Procedure(Procedure::BuiltinVariableArgumentForm("-", _subtract, 1));
 
 pub fn _divide(
   args: Vec<Expression>,
@@ -110,7 +111,7 @@ pub fn _divide(
 }
 
 pub const DIVIDE: Expression =
-  Expression::Procedure(Procedure::BuiltinVariableArgumentForm(_divide, 1));
+  Expression::Procedure(Procedure::BuiltinVariableArgumentForm("/", _divide, 1));
 
 #[cfg(test)]
 mod test {

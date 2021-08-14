@@ -5,7 +5,8 @@ fn _cons(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> ProcedureResult {
   let right = evaluate(args.get(1).unwrap(), scope)?;
   Ok(ProcedureValue::Expression(cons!(&left, &right)))
 }
-pub const CONS: Expression = Expression::Procedure(Procedure::BuiltinFixedArgumentForm(_cons, 2));
+pub const CONS: Expression =
+  Expression::Procedure(Procedure::BuiltinFixedArgumentForm("cons", _cons, 2));
 
 fn _car(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> ProcedureResult {
   let arg = evaluate(args.get(0).unwrap(), scope)?;
@@ -15,7 +16,8 @@ fn _car(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> ProcedureResult {
     Err(EvaluationError::InvalidArgument)
   }
 }
-pub const CAR: Expression = Expression::Procedure(Procedure::BuiltinFixedArgumentForm(_car, 1));
+pub const CAR: Expression =
+  Expression::Procedure(Procedure::BuiltinFixedArgumentForm("car", _car, 1));
 
 fn _cdr(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> ProcedureResult {
   let arg = evaluate(args.get(0).unwrap(), scope)?;
@@ -25,7 +27,8 @@ fn _cdr(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> ProcedureResult {
     Err(EvaluationError::InvalidArgument)
   }
 }
-pub const CDR: Expression = Expression::Procedure(Procedure::BuiltinFixedArgumentForm(_cdr, 1));
+pub const CDR: Expression =
+  Expression::Procedure(Procedure::BuiltinFixedArgumentForm("cdr", _cdr, 1));
 
 #[cfg(test)]
 mod test {

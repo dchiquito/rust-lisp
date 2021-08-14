@@ -165,13 +165,13 @@ fn _evaluate_procedure(
         .define(vararg_name, vec_arg(evaluated_varargs)?);
       _evaluate_procedure_body(body, inner_scope)
     }
-    Procedure::BuiltinFixedArgumentForm(builtin, argc) => {
+    Procedure::BuiltinFixedArgumentForm(_procedure_name, builtin, argc) => {
       if args.len() != *argc {
         return Err(EvaluationError::WrongNumberOfArguments(*argc, args.len()));
       }
       builtin(args, scope)
     }
-    Procedure::BuiltinVariableArgumentForm(builtin, argc) => {
+    Procedure::BuiltinVariableArgumentForm(_procedure_name, builtin, argc) => {
       if args.len() < *argc {
         return Err(EvaluationError::WrongNumberOfVariableArguments(
           *argc,

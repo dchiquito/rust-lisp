@@ -48,7 +48,7 @@ fn _lambda(
   }
 }
 pub const LAMBDA: Expression =
-  Expression::Procedure(Procedure::BuiltinVariableArgumentForm(_lambda, 2));
+  Expression::Procedure(Procedure::BuiltinVariableArgumentForm("lambda", _lambda, 2));
 
 #[cfg(test)]
 mod test {

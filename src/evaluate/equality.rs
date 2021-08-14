@@ -6,7 +6,8 @@ fn _eq(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> ProcedureResult {
   Ok(ProcedureValue::Expression(boolean!(a == b)))
 }
 
-pub const EQ: Expression = Expression::Procedure(Procedure::BuiltinFixedArgumentForm(_eq, 2));
+pub const EQ: Expression =
+  Expression::Procedure(Procedure::BuiltinFixedArgumentForm("eq?", _eq, 2));
 
 #[cfg(test)]
 mod test {

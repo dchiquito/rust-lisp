@@ -32,7 +32,7 @@ fn _equals(
     comparison_operator!(==, args, varargs, scope)
 }
 pub const EQUALS: Expression =
-    Expression::Procedure(Procedure::BuiltinVariableArgumentForm(_equals, 1));
+    Expression::Procedure(Procedure::BuiltinVariableArgumentForm("=", _equals, 1));
 
 fn _less_than(
     args: Vec<Expression>,
@@ -42,7 +42,7 @@ fn _less_than(
     comparison_operator!(<, args, varargs, scope)
 }
 pub const LESS_THAN: Expression =
-    Expression::Procedure(Procedure::BuiltinVariableArgumentForm(_less_than, 1));
+    Expression::Procedure(Procedure::BuiltinVariableArgumentForm("<", _less_than, 1));
 
 fn _greater_than(
     args: Vec<Expression>,
@@ -51,8 +51,11 @@ fn _greater_than(
 ) -> ProcedureResult {
     comparison_operator!(>, args, varargs, scope)
 }
-pub const GREATER_THAN: Expression =
-    Expression::Procedure(Procedure::BuiltinVariableArgumentForm(_greater_than, 1));
+pub const GREATER_THAN: Expression = Expression::Procedure(Procedure::BuiltinVariableArgumentForm(
+    ">",
+    _greater_than,
+    1,
+));
 
 fn _less_than_or_equal(
     args: Vec<Expression>,
@@ -62,7 +65,7 @@ fn _less_than_or_equal(
     comparison_operator!(<=, args, varargs, scope)
 }
 pub const LESS_THAN_OR_EQUAL: Expression = Expression::Procedure(
-    Procedure::BuiltinVariableArgumentForm(_less_than_or_equal, 1),
+    Procedure::BuiltinVariableArgumentForm("<=", _less_than_or_equal, 1),
 );
 
 fn _greater_than_or_equal(
@@ -73,7 +76,7 @@ fn _greater_than_or_equal(
     comparison_operator!(>=, args, varargs, scope)
 }
 pub const GREATER_THAN_OR_EQUAL: Expression = Expression::Procedure(
-    Procedure::BuiltinVariableArgumentForm(_greater_than_or_equal, 1),
+    Procedure::BuiltinVariableArgumentForm(">=", _greater_than_or_equal, 1),
 );
 
 #[cfg(test)]

@@ -73,11 +73,13 @@ pub enum Procedure {
   FixedArgumentForm(Vec<String>, Vec<Expression>),
   VariableArgumentForm(Vec<String>, String, Vec<Expression>),
   BuiltinFixedArgumentForm(
+    &'static str,
     fn(Vec<Expression>, Rc<RefCell<Scope>>) -> ProcedureResult,
     usize,
   ),
   #[allow(clippy::type_complexity)]
   BuiltinVariableArgumentForm(
+    &'static str,
     fn(Vec<Expression>, Vec<Expression>, Rc<RefCell<Scope>>) -> ProcedureResult,
     usize,
   ),
@@ -94,25 +96,6 @@ pub enum Expression {
   Void,
 }
 
-impl fmt::Display for Expression {
-  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    match self {
-      Expression::Symbol(symbol) => write!(f, "{}", symbol),
-      Expression::Cons(cons) => write!(f, "{}", cons),
-      Expression::Number(number) => write!(f, "{}", number),
-      Expression::Boolean(boolean) => {
-        if *boolean {
-          write!(f, "#t")
-        } else {
-          write!(f, "#f")
-        }
-      }
-      Expression::Procedure(_) => write!(f, "#<procedure>"),
-      Expression::Null => write!(f, "'()"),
-      Expression::Void => write!(f, "#<void>"),
-    }
-  }
-}
 impl fmt::Debug for Expression {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     match self {
@@ -126,7 +109,44 @@ impl fmt::Debug for Expression {
           write!(f, "#f")
         }
       }
-      Expression::Procedure(_) => write!(f, "#<procedure>"),
+      Expression::Procedure(procedure) => match procedure {
+        Procedure::FixedArgumentForm(_, _) => write!(f, "#<procedure>"),
+        Procedure::VariableArgumentForm(_, _, _) => write!(f, "#<procedure>"),
+        Procedure::BuiltinFixedArgumentForm(procedure_name, _, _) => {
+          write!(f, "#<procedure:{}>", procedure_name)
+        }
+        Procedure::BuiltinVariableArgumentForm(procedure_name, _, _) => {
+          write!(f, "#<procedure:{}>", procedure_name)
+        }
+      },
+      Expression::Null => write!(f, "'()"),
+      Expression::Void => write!(f, "#<void>"),
+    }
+  }
+}
+impl fmt::Display for Expression {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    match self {
+      Expression::Symbol(symbol) => write!(f, "{}", symbol),
+      Expression::Cons(cons) => write!(f, "{}", cons),
+      Expression::Number(number) => write!(f, "{}", number),
+      Expression::Boolean(boolean) => {
+        if *boolean {
+          write!(f, "#t")
+        } else {
+          write!(f, "#f")
+        }
+      }
+      Expression::Procedure(procedure) => match procedure {
+        Procedure::FixedArgumentForm(_, _) => write!(f, "#<procedure>"),
+        Procedure::VariableArgumentForm(_, _, _) => write!(f, "#<procedure>"),
+        Procedure::BuiltinFixedArgumentForm(procedure_name, _, _) => {
+          write!(f, "#<procedure:{}>", procedure_name)
+        }
+        Procedure::BuiltinVariableArgumentForm(procedure_name, _, _) => {
+          write!(f, "#<procedure:{}>", procedure_name)
+        }
+      },
       Expression::Null => write!(f, "'()"),
       Expression::Void => write!(f, "#<void>"),
     }
@@ -146,7 +166,16 @@ impl Expression {
           "#f".to_string()
         }
       }
-      Expression::Procedure(_) => "#<procedure>".to_string(),
+      Expression::Procedure(procedure) => match procedure {
+        Procedure::FixedArgumentForm(_, _) => "#<procedure>".to_string(),
+        Procedure::VariableArgumentForm(_, _, _) => "#<procedure>".to_string(),
+        Procedure::BuiltinFixedArgumentForm(procedure_name, _, _) => {
+          format!("#<procedure:{}>", procedure_name)
+        }
+        Procedure::BuiltinVariableArgumentForm(procedure_name, _, _) => {
+          format!("#<procedure:{}>", procedure_name)
+        }
+      },
       Expression::Null => "'()".to_string(),
       Expression::Void => "#<void>".to_string(),
     }
