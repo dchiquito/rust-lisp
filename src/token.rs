@@ -3,7 +3,7 @@ fn consume_non_tokens(string: &str) -> (Option<char>, String) {
   let mut string = string.chars();
   let mut first_token_char = None;
   let mut in_comment = false;
-  while let Some(c) = string.next() {
+  for c in &mut string {
     if !in_comment {
       if c == ';' {
         in_comment = true;
@@ -11,10 +11,8 @@ fn consume_non_tokens(string: &str) -> (Option<char>, String) {
         first_token_char = Some(c);
         break;
       }
-    } else {
-      if c == '\n' {
-        in_comment = false;
-      }
+    } else if c == '\n' {
+      in_comment = false;
     }
   }
   (first_token_char, string.collect())
@@ -37,7 +35,7 @@ pub fn pop_token(string: &str) -> (Option<String>, String) {
         while !remainder.is_empty() {
           let next_char = remainder.chars().next().unwrap();
           if (next_char == '(') | (next_char == ')') | next_char.is_whitespace() {
-            return (Some(symbol), String::from(remainder));
+            return (Some(symbol), remainder);
           }
           symbol.push(next_char);
           remainder = remainder.get(1..).unwrap().to_string();
