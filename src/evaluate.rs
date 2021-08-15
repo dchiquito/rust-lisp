@@ -71,9 +71,6 @@ impl fmt::Display for EvaluationError {
           non_procedure.outer_representation()
         )
       }
-      err => {
-        write!(fmt, "{:?}", err)
-      }
     }
   }
 }
