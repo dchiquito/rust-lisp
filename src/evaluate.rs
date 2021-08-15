@@ -19,7 +19,7 @@ pub enum EvaluationError {
   InvalidArgument,
   UndefinedSymbol(String),
   DivideByZero(Number),
-  NotAProcedure,
+  NotAProcedure(Expression),
 }
 impl fmt::Display for EvaluationError {
   fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
@@ -43,6 +43,13 @@ impl fmt::Display for EvaluationError {
       }
       EvaluationError::DivideByZero(quotient) => {
         write!(fmt, "attempted to divide {} by 0", quotient)
+      }
+      EvaluationError::NotAProcedure(non_procedure) => {
+        write!(
+          fmt,
+          "expected a procedure, given {}",
+          non_procedure.outer_representation()
+        )
       }
       err => {
         write!(fmt, "{:?}", err)
@@ -231,7 +238,7 @@ pub fn evaluate_in_tail_position(
           scope,
         ))
       }
-      _ => Err(EvaluationError::NotAProcedure),
+      non_procedure => Err(EvaluationError::NotAProcedure(non_procedure)),
     },
     _ => Ok(ProcedureValue::Expression(expression.clone())),
   }
