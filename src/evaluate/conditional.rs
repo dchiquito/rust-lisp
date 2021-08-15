@@ -8,18 +8,26 @@ fn _cond(
   // Validate all of the clauses before evaluating anything
   // All clauses must be non-empty lists
   for clause in &varargs {
-    let clause = arg_vec(clause)?;
+    let clause = arg_vec("cond", clause)?;
     if clause.is_empty() {
-      return Err(EvaluationError::InvalidArgument);
+      return Err(EvaluationError::invalid_argument(
+        "cond",
+        "clause is not a test-value pair",
+        &null!(),
+      ));
     }
   }
   // The final else clause (if it exists) needs to be handled specially
   let else_clause = if let Some(last_clause) = varargs.pop() {
-    let last_clause_vec = arg_vec(&last_clause)?;
+    let last_clause_vec = arg_vec("cond", &last_clause)?;
     if last_clause_vec.get(0) == Some(&symbol!("else")) {
       if last_clause_vec.len() < 2 {
         // the else clause needs at least one expression
-        return Err(EvaluationError::InvalidArgument);
+        return Err(EvaluationError::invalid_argument(
+          "cond",
+          "missing expressions in else clause",
+          &last_clause,
+        ));
       }
       Some(last_clause)
     } else {
@@ -31,8 +39,9 @@ fn _cond(
     None
   };
   for clause in varargs {
-    let clause = arg_vec(&clause)?;
-    let test = clause.get(0).ok_or(EvaluationError::InvalidArgument)?;
+    let clause = arg_vec("cond", &clause)?;
+    // This was verified as the first step of this function
+    let test = clause.get(0).unwrap();
     let test = evaluate(test, scope.clone())?;
     if test != boolean!(false) {
       let mut expression = test;
@@ -52,7 +61,7 @@ fn _cond(
     }
   }
   if let Some(else_clause) = else_clause {
-    let else_clause = arg_vec(&else_clause)?;
+    let else_clause = arg_vec("cond", &else_clause)?;
     let mut else_body = else_clause[1..].iter();
     let mut expression = evaluate_in_tail_position(else_body.next().unwrap(), scope.clone())?;
     for next_expression in else_body {
@@ -81,7 +90,7 @@ mod test {
     );
     assert_eq!(
       evaluate(&parse("(cond 5)").unwrap(), scope.clone()),
-      Err(EvaluationError::InvalidArgument)
+      Err(EvaluationError::invalid_argument("cond", "list", &int!(5)))
     );
     assert_eq!(
       evaluate(&parse("(cond (#t 1))").unwrap(), scope.clone()),

@@ -26,7 +26,9 @@ fn _lambda(
           args.push(symbol.clone());
           formals = cons.cdr.as_ref();
         } else {
-          return Err(EvaluationError::InvalidArgument);
+          return Err(EvaluationError::invalid_argument(
+            "lambda", "symbol", formals,
+          ));
         }
       }
       if formals != &null!() {
@@ -38,13 +40,15 @@ fn _lambda(
             body
           )))
         } else {
-          Err(EvaluationError::InvalidArgument)
+          Err(EvaluationError::invalid_argument(
+            "lambda", "symbol", formals,
+          ))
         }
       } else {
         Ok(ProcedureValue::Expression(procedure!(args, body)))
       }
     }
-    _ => Err(EvaluationError::InvalidArgument),
+    _ => Err(EvaluationError::invalid_argument("lambda", "list", formals)),
   }
 }
 pub const LAMBDA: Expression =

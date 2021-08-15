@@ -16,10 +16,23 @@ use std::rc::Rc;
 pub enum EvaluationError {
   WrongNumberOfArguments(String, usize, usize),
   WrongNumberOfVariableArguments(String, usize, usize),
-  InvalidArgument,
+  InvalidArgument(String, String, Expression),
   UndefinedSymbol(String),
   DivideByZero(Number),
   NotAProcedure(Expression),
+}
+impl EvaluationError {
+  pub fn invalid_argument(
+    procedure_name: &str,
+    expected: &str,
+    actual: &Expression,
+  ) -> EvaluationError {
+    EvaluationError::InvalidArgument(
+      procedure_name.to_string(),
+      expected.to_string(),
+      actual.clone(),
+    )
+  }
 }
 impl fmt::Display for EvaluationError {
   fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
@@ -35,6 +48,13 @@ impl fmt::Display for EvaluationError {
         write!(
           fmt,
           "wrong number of arguments for {}: expected {} or more, got {}",
+          procedure_name, expected, actual
+        )
+      }
+      EvaluationError::InvalidArgument(procedure_name, expected, actual) => {
+        write!(
+          fmt,
+          "invalid argument for {}: expected {}, got {}",
           procedure_name, expected, actual
         )
       }
@@ -76,14 +96,19 @@ impl ProcedureValue {
 }
 pub type ProcedureResult = Result<ProcedureValue, EvaluationError>;
 
-fn arg_vec(mut expression: &Expression) -> Result<Vec<Expression>, EvaluationError> {
+fn arg_vec(procedure_name: &str, list: &Expression) -> Result<Vec<Expression>, EvaluationError> {
   let mut args = vec![];
-  while let Expression::Cons(cons) = expression {
+  let mut sublist = list;
+  while let Expression::Cons(cons) = sublist {
     args.push(cons.car.as_ref().clone());
-    expression = cons.cdr.as_ref();
+    sublist = cons.cdr.as_ref();
   }
-  if expression != &null!() {
-    return Err(EvaluationError::InvalidArgument);
+  if sublist != &null!() {
+    return Err(EvaluationError::invalid_argument(
+      procedure_name,
+      "list",
+      list,
+    ));
   }
   Ok(args)
 }
@@ -135,7 +160,7 @@ fn _evaluate_procedure(
   args: &Expression,
   scope: Rc<RefCell<Scope>>,
 ) -> ProcedureResult {
-  let args = arg_vec(args)?;
+  let args = arg_vec(&procedure.name(), args)?;
   match &procedure {
     Procedure::FixedArgumentForm(arg_names, body) => {
       if args.len() != arg_names.len() {

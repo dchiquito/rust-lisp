@@ -84,6 +84,16 @@ pub enum Procedure {
     usize,
   ),
 }
+impl Procedure {
+  pub fn name(&self) -> String {
+    match self {
+      Procedure::FixedArgumentForm(_, _) => "#<procedure>".to_string(),
+      Procedure::VariableArgumentForm(_, _, _) => "#<procedure>".to_string(),
+      Procedure::BuiltinFixedArgumentForm(procedure_name, _, _) => procedure_name.to_string(),
+      Procedure::BuiltinVariableArgumentForm(procedure_name, _, _) => procedure_name.to_string(),
+    }
+  }
+}
 
 #[derive(Clone, Eq, PartialEq)]
 pub enum Expression {

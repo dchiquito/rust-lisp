@@ -7,19 +7,19 @@ fn _add(
   varargs: Vec<Expression>,
   scope: Rc<RefCell<Scope>>,
 ) -> ProcedureResult {
-  if let Expression::Number(Number::Integer(mut sum)) =
-    evaluate(args.get(0).unwrap(), scope.clone())?
-  {
+  let sum = evaluate(args.get(0).unwrap(), scope.clone())?;
+  if let Expression::Number(Number::Integer(mut sum)) = sum {
     for arg in varargs {
-      if let Expression::Number(Number::Integer(integer)) = evaluate(&arg, scope.clone())? {
+      let term = evaluate(&arg, scope.clone())?;
+      if let Expression::Number(Number::Integer(integer)) = term {
         sum += integer;
       } else {
-        return Err(EvaluationError::InvalidArgument);
+        return Err(EvaluationError::invalid_argument("+", "number", &term));
       }
     }
     Ok(ProcedureValue::Expression(int!(sum)))
   } else {
-    Err(EvaluationError::InvalidArgument)
+    Err(EvaluationError::invalid_argument("+", "number", &sum))
   }
 }
 
@@ -31,19 +31,19 @@ pub fn _multiply(
   varargs: Vec<Expression>,
   scope: Rc<RefCell<Scope>>,
 ) -> ProcedureResult {
-  if let Expression::Number(Number::Integer(mut product)) =
-    evaluate(args.get(0).unwrap(), scope.clone())?
-  {
+  let product = evaluate(args.get(0).unwrap(), scope.clone())?;
+  if let Expression::Number(Number::Integer(mut product)) = product {
     for arg in varargs {
-      if let Expression::Number(Number::Integer(integer)) = evaluate(&arg, scope.clone())? {
+      let term = evaluate(&arg, scope.clone())?;
+      if let Expression::Number(Number::Integer(integer)) = term {
         product *= integer;
       } else {
-        return Err(EvaluationError::InvalidArgument);
+        return Err(EvaluationError::invalid_argument("*", "number", &term));
       }
     }
     Ok(ProcedureValue::Expression(int!(product)))
   } else {
-    Err(EvaluationError::InvalidArgument)
+    Err(EvaluationError::invalid_argument("*", "number", &product))
   }
 }
 
@@ -55,23 +55,27 @@ pub fn _subtract(
   varargs: Vec<Expression>,
   scope: Rc<RefCell<Scope>>,
 ) -> ProcedureResult {
-  if let Expression::Number(Number::Integer(mut negation)) =
-    evaluate(args.get(0).unwrap(), scope.clone())?
-  {
+  let subtraction = evaluate(args.get(0).unwrap(), scope.clone())?;
+  if let Expression::Number(Number::Integer(mut subtraction)) = subtraction {
     if varargs.is_empty() {
-      Ok(ProcedureValue::Expression(int!(-negation)))
+      Ok(ProcedureValue::Expression(int!(-subtraction)))
     } else {
       for arg in varargs {
-        if let Expression::Number(Number::Integer(integer)) = evaluate(&arg, scope.clone())? {
-          negation -= integer;
+        let term = evaluate(&arg, scope.clone())?;
+        if let Expression::Number(Number::Integer(integer)) = term {
+          subtraction -= integer;
         } else {
-          return Err(EvaluationError::InvalidArgument);
+          return Err(EvaluationError::invalid_argument("-", "number", &term));
         }
       }
-      Ok(ProcedureValue::Expression(int!(negation)))
+      Ok(ProcedureValue::Expression(int!(subtraction)))
     }
   } else {
-    Err(EvaluationError::InvalidArgument)
+    Err(EvaluationError::invalid_argument(
+      "-",
+      "number",
+      &subtraction,
+    ))
   }
 }
 
@@ -83,9 +87,8 @@ pub fn _divide(
   varargs: Vec<Expression>,
   scope: Rc<RefCell<Scope>>,
 ) -> ProcedureResult {
-  if let Expression::Number(Number::Integer(mut quotient)) =
-    evaluate(args.get(0).unwrap(), scope.clone())?
-  {
+  let quotient = evaluate(args.get(0).unwrap(), scope.clone())?;
+  if let Expression::Number(Number::Integer(mut quotient)) = quotient {
     if varargs.is_empty() {
       if quotient == 0 {
         Err(EvaluationError::DivideByZero(Number::Integer(1)))
@@ -94,19 +97,20 @@ pub fn _divide(
       }
     } else {
       for arg in varargs {
-        if let Expression::Number(Number::Integer(integer)) = evaluate(&arg, scope.clone())? {
+        let term = evaluate(&arg, scope.clone())?;
+        if let Expression::Number(Number::Integer(integer)) = term {
           if integer == 0 {
             return Err(EvaluationError::DivideByZero(Number::Integer(quotient)));
           }
           quotient /= integer;
         } else {
-          return Err(EvaluationError::InvalidArgument);
+          return Err(EvaluationError::invalid_argument("/", "number", &term));
         }
       }
       Ok(ProcedureValue::Expression(int!(quotient)))
     }
   } else {
-    Err(EvaluationError::InvalidArgument)
+    Err(EvaluationError::invalid_argument("/", "number", &quotient))
   }
 }
 
@@ -155,7 +159,7 @@ mod test {
     );
     assert_eq!(
       evaluate(&parse("(+ ())").unwrap(), scope.clone()),
-      Err(EvaluationError::InvalidArgument)
+      Err(EvaluationError::invalid_argument("+", "number", &null!()))
     );
     // Test an improper list
     assert_eq!(
@@ -163,7 +167,11 @@ mod test {
         &cons!(&symbol!("+"), &cons!(&int!(1), &int!(2))),
         scope.clone()
       ),
-      Err(EvaluationError::InvalidArgument)
+      Err(EvaluationError::invalid_argument(
+        "+",
+        "list",
+        &cons!(&int!(1), &int!(2))
+      ))
     );
   }
 
@@ -204,7 +212,7 @@ mod test {
     );
     assert_eq!(
       evaluate(&parse("(* ())").unwrap(), scope.clone()),
-      Err(EvaluationError::InvalidArgument)
+      Err(EvaluationError::invalid_argument("*", "number", &null!()))
     );
     // Test an improper list
     assert_eq!(
@@ -212,7 +220,11 @@ mod test {
         &cons!(&symbol!("*"), &cons!(&int!(1), &int!(2))),
         scope.clone()
       ),
-      Err(EvaluationError::InvalidArgument)
+      Err(EvaluationError::invalid_argument(
+        "*",
+        "list",
+        &cons!(&int!(1), &int!(2))
+      ))
     );
   }
 
@@ -253,7 +265,7 @@ mod test {
     );
     assert_eq!(
       evaluate(&parse("(- ())").unwrap(), scope.clone()),
-      Err(EvaluationError::InvalidArgument)
+      Err(EvaluationError::invalid_argument("-", "number", &null!()))
     );
     // Test an improper list
     assert_eq!(
@@ -261,7 +273,11 @@ mod test {
         &cons!(&symbol!("-"), &cons!(&int!(1), &int!(2))),
         scope.clone()
       ),
-      Err(EvaluationError::InvalidArgument)
+      Err(EvaluationError::invalid_argument(
+        "-",
+        "list",
+        &cons!(&int!(1), &int!(2))
+      ))
     );
   }
 
@@ -322,7 +338,7 @@ mod test {
     );
     assert_eq!(
       evaluate(&parse("(/ ())").unwrap(), scope.clone()),
-      Err(EvaluationError::InvalidArgument)
+      Err(EvaluationError::invalid_argument("/", "number", &null!()))
     );
     // Test an improper list
     assert_eq!(
@@ -330,7 +346,11 @@ mod test {
         &cons!(&symbol!("/"), &cons!(&int!(1), &int!(2))),
         scope.clone()
       ),
-      Err(EvaluationError::InvalidArgument)
+      Err(EvaluationError::invalid_argument(
+        "/",
+        "list",
+        &cons!(&int!(1), &int!(2))
+      ))
     );
   }
 }

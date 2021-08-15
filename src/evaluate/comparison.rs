@@ -1,13 +1,13 @@
 use super::*;
 
 macro_rules! comparison_operator {
-    ($comparison:tt, $args:expr, $varargs:expr, $scope:expr) => {{
+    ($operator_name:expr, $comparison:tt, $args:expr, $varargs:expr, $scope:expr) => {{
         // Evaluate the arguments and verify that all results are numbers
         // fn to_number(expression: &Expression) -> Result<Number, EvaluationError> {
         // }
         let to_number = |expression| match evaluate(expression, $scope.clone())? {
             Expression::Number(number) => Ok(number),
-            _ => Err(EvaluationError::InvalidArgument),
+            non_number => Err(EvaluationError::invalid_argument($operator_name, "number", &non_number)),
         };
         let mut previous_arg = &to_number($args.get(0).unwrap())?;
         let varargs = $varargs
@@ -29,7 +29,7 @@ fn _equals(
     varargs: Vec<Expression>,
     scope: Rc<RefCell<Scope>>,
 ) -> ProcedureResult {
-    comparison_operator!(==, args, varargs, scope)
+    comparison_operator!("=", ==, args, varargs, scope)
 }
 pub const EQUALS: Expression =
     Expression::Procedure(Procedure::BuiltinVariableArgumentForm("=", _equals, 1));
@@ -39,7 +39,7 @@ fn _less_than(
     varargs: Vec<Expression>,
     scope: Rc<RefCell<Scope>>,
 ) -> ProcedureResult {
-    comparison_operator!(<, args, varargs, scope)
+    comparison_operator!("<", <, args, varargs, scope)
 }
 pub const LESS_THAN: Expression =
     Expression::Procedure(Procedure::BuiltinVariableArgumentForm("<", _less_than, 1));
@@ -49,7 +49,7 @@ fn _greater_than(
     varargs: Vec<Expression>,
     scope: Rc<RefCell<Scope>>,
 ) -> ProcedureResult {
-    comparison_operator!(>, args, varargs, scope)
+    comparison_operator!(">",>, args, varargs, scope)
 }
 pub const GREATER_THAN: Expression = Expression::Procedure(Procedure::BuiltinVariableArgumentForm(
     ">",
@@ -62,7 +62,7 @@ fn _less_than_or_equal(
     varargs: Vec<Expression>,
     scope: Rc<RefCell<Scope>>,
 ) -> ProcedureResult {
-    comparison_operator!(<=, args, varargs, scope)
+    comparison_operator!("<=",<=, args, varargs, scope)
 }
 pub const LESS_THAN_OR_EQUAL: Expression = Expression::Procedure(
     Procedure::BuiltinVariableArgumentForm("<=", _less_than_or_equal, 1),
@@ -73,7 +73,7 @@ fn _greater_than_or_equal(
     varargs: Vec<Expression>,
     scope: Rc<RefCell<Scope>>,
 ) -> ProcedureResult {
-    comparison_operator!(>=, args, varargs, scope)
+    comparison_operator!(">=", >=, args, varargs, scope)
 }
 pub const GREATER_THAN_OR_EQUAL: Expression = Expression::Procedure(
     Procedure::BuiltinVariableArgumentForm(">=", _greater_than_or_equal, 1),
@@ -128,7 +128,11 @@ mod test {
         );
         assert_eq!(
             evaluate(&parse("(= 'foo)").unwrap(), scope.clone()),
-            Err(EvaluationError::InvalidArgument)
+            Err(EvaluationError::invalid_argument(
+                "=",
+                "number",
+                &symbol!("foo")
+            ))
         );
     }
 
@@ -173,7 +177,11 @@ mod test {
         );
         assert_eq!(
             evaluate(&parse("(< 'foo)").unwrap(), scope.clone()),
-            Err(EvaluationError::InvalidArgument)
+            Err(EvaluationError::invalid_argument(
+                "<",
+                "number",
+                &symbol!("foo")
+            ))
         );
     }
 
@@ -218,7 +226,11 @@ mod test {
         );
         assert_eq!(
             evaluate(&parse("(> 'foo)").unwrap(), scope.clone()),
-            Err(EvaluationError::InvalidArgument)
+            Err(EvaluationError::invalid_argument(
+                ">",
+                "number",
+                &symbol!("foo")
+            ))
         );
     }
 
@@ -267,7 +279,11 @@ mod test {
         );
         assert_eq!(
             evaluate(&parse("(<= 'foo)").unwrap(), scope.clone()),
-            Err(EvaluationError::InvalidArgument)
+            Err(EvaluationError::invalid_argument(
+                "<=",
+                "number",
+                &symbol!("foo")
+            ))
         );
     }
 
@@ -316,7 +332,11 @@ mod test {
         );
         assert_eq!(
             evaluate(&parse("(>= 'foo)").unwrap(), scope.clone()),
-            Err(EvaluationError::InvalidArgument)
+            Err(EvaluationError::invalid_argument(
+                ">=",
+                "number",
+                &symbol!("foo")
+            ))
         );
     }
 }

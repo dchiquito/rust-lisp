@@ -13,7 +13,7 @@ fn _car(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> ProcedureResult {
   if let Expression::Cons(cons) = arg {
     Ok(ProcedureValue::Expression(cons.car.as_ref().clone()))
   } else {
-    Err(EvaluationError::InvalidArgument)
+    Err(EvaluationError::invalid_argument("car", "list", &arg))
   }
 }
 pub const CAR: Expression =
@@ -24,7 +24,7 @@ fn _cdr(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> ProcedureResult {
   if let Expression::Cons(cons) = arg {
     Ok(ProcedureValue::Expression(cons.cdr.as_ref().clone()))
   } else {
-    Err(EvaluationError::InvalidArgument)
+    Err(EvaluationError::invalid_argument("cdr", "list", &arg))
   }
 }
 pub const CDR: Expression =
