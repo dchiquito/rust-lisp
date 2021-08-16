@@ -20,19 +20,23 @@ test_rust_lisp () {
 
 test_file () {
     echo "Testing $1"
-    test_racket $1
-    test_rust_lisp $1
-    diff target/racket/$1 target/rust_lisp/$1
+    test_racket $1 && test_rust_lisp $1 && diff target/racket/$1 target/rust_lisp/$1
 }
 
 test_all () {
     cd src
     TEST_FILES=`echo *.lisp`
     cd ..
+    FAILED=0
     for file in $TEST_FILES
     do
-        test_file $file
+        if test_file $file; then
+            :
+        else
+            FAILED=1
+        fi
     done
+    return $FAILED
 }
 
 test_all
