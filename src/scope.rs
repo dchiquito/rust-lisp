@@ -1,5 +1,5 @@
-use super::*;
-use crate::evaluate::{define_builtins, EvaluationError, EvaluationResult};
+use crate::evaluate::{EvaluationError, EvaluationResult};
+use crate::*;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;

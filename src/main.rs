@@ -1,3 +1,4 @@
+mod builtins;
 mod evaluate;
 mod exec;
 mod parse;
@@ -5,7 +6,8 @@ mod scope;
 mod token;
 mod types;
 
-pub use crate::evaluate::{define_builtins, evaluate};
+pub use crate::builtins::define_builtins;
+pub use crate::evaluate::evaluate;
 pub use crate::parse::parse;
 pub use crate::scope::Scope;
 pub use crate::types::*;
