@@ -57,7 +57,7 @@ mod test {
     assert_eq!(consume_non_tokens("aaaa"), (Some('a'), String::from("aaa")));
     assert_eq!(
       consume_non_tokens("  ; bbb \n  aaaa"),
-      (Some('a'), String::from("aaa"))
+      (Some('a'), String::from("aaa")),
     );
   }
 
@@ -69,7 +69,7 @@ mod test {
     assert_eq!(pop_token("'"), (Some(String::from("'")), String::new()));
     assert_eq!(
       pop_token("aaaa"),
-      (Some(String::from("aaaa")), String::new())
+      (Some(String::from("aaaa")), String::new()),
     );
   }
 
@@ -80,11 +80,11 @@ mod test {
     assert_eq!(pop_token(" \t )"), (Some(String::from(")")), String::new()));
     assert_eq!(
       pop_token("  ' "),
-      (Some(String::from("'")), String::from(" "))
+      (Some(String::from("'")), String::from(" ")),
     );
     assert_eq!(
       pop_token("    aaaa"),
-      (Some(String::from("aaaa")), String::new())
+      (Some(String::from("aaaa")), String::new()),
     );
   }
 
@@ -92,23 +92,23 @@ mod test {
   fn test_pop_token_multiple_tokens() {
     assert_eq!(
       pop_token("()"),
-      (Some(String::from("(")), String::from(")"))
+      (Some(String::from("(")), String::from(")")),
     );
     assert_eq!(
       pop_token(")("),
-      (Some(String::from(")")), String::from("("))
+      (Some(String::from(")")), String::from("(")),
     );
     assert_eq!(
       pop_token("(a123"),
-      (Some(String::from("(")), String::from("a123"))
+      (Some(String::from("(")), String::from("a123")),
     );
     assert_eq!(
       pop_token("+++)"),
-      (Some(String::from("+++")), String::from(")"))
+      (Some(String::from("+++")), String::from(")")),
     );
     assert_eq!(
       pop_token("'()"),
-      (Some(String::from("'")), String::from("()"))
+      (Some(String::from("'")), String::from("()")),
     );
   }
 
@@ -121,7 +121,7 @@ mod test {
     assert_eq!(pop_token(";\n\n\n"), (None, String::new()));
     assert_eq!(
       pop_token("; comment \n("),
-      (Some(String::from("(")), String::new())
+      (Some(String::from("(")), String::new()),
     );
   }
 }

@@ -51,57 +51,39 @@ fn _lambda(
     _ => Err(EvaluationError::invalid_argument("lambda", "list", formals)),
   }
 }
-pub const LAMBDA: Expression =
-  Expression::Procedure(Procedure::BuiltinVariableArgumentForm("lambda", _lambda, 2));
+pub const LAMBDA: Procedure = Procedure::BuiltinVariableArgumentForm("lambda", _lambda, 2);
 
 #[cfg(test)]
 mod test {
   use super::*;
-  use crate::parse::parse;
+  use crate::test::TestContext;
 
   #[test]
   fn test_lambda_inline() {
-    let scope = Scope::builtins();
-    assert_eq!(
-      evaluate(&parse("((lambda (x) (+ x 1)) 5)").unwrap(), scope.clone()),
-      Ok(int!(6))
+    let ctx = TestContext::new();
+    ctx.assert_eq("((lambda (x) (+ x 1)) 5)", int!(6));
+    ctx.assert_eq(
+      "((lambda x (cons 0 x)) 1 2)",
+      list!(&int!(0), &int!(1), &int!(2)),
     );
-    assert_eq!(
-      evaluate(
-        &parse("((lambda x (cons 0 x)) 1 2)").unwrap(),
-        scope.clone()
-      ),
-      Ok(list!(&int!(0), &int!(1), &int!(2)))
-    );
-    assert_eq!(
-      evaluate(
-        &parse("((lambda (x . y) (cons x y)) 1 2 3)").unwrap(),
-        scope.clone()
-      ),
-      Ok(list!(&int!(1), &int!(2), &int!(3)))
+    ctx.assert_eq(
+      "((lambda (x . y) (cons x y)) 1 2 3)",
+      list!(&int!(1), &int!(2), &int!(3)),
     );
   }
   #[test]
   fn test_lambda_define() {
-    let scope = Scope::builtins();
-    evaluate(
-      &parse("(define square (lambda (a) (* a a)))").unwrap(),
-      scope.clone(),
-    )
-    .unwrap();
+    let ctx = TestContext::new();
+    ctx.exec("(define square (lambda (a) (* a a)))");
     for i in -20..20 {
-      assert_eq!(
-        evaluate(&parse(&format!("(square {})", i)).unwrap(), scope.clone()),
-        Ok(int!(i * i))
-      );
+      ctx.assert_eq(&format!("(square {})", i), int!(i * i));
     }
   }
   #[test]
   fn test_lambda_fibonacci_naive() {
-    let scope = Scope::builtins();
-    evaluate(
-      &parse(
-        "
+    let ctx = TestContext::new();
+    ctx.exec(
+      "
 (define fibonacci (lambda (index)
   (cond
     ((eq? index 0) 0)
@@ -112,73 +94,31 @@ mod test {
     ))
   )
 ))",
-      )
-      .unwrap(),
-      scope.clone(),
-    )
-    .unwrap();
-    assert_eq!(
-      evaluate(&parse("(fibonacci 0)").unwrap(), scope.clone()),
-      Ok(int!(0))
     );
-    assert_eq!(
-      evaluate(&parse("(fibonacci 1)").unwrap(), scope.clone()),
-      Ok(int!(1))
-    );
-    assert_eq!(
-      evaluate(&parse("(fibonacci 2)").unwrap(), scope.clone()),
-      Ok(int!(1))
-    );
-    assert_eq!(
-      evaluate(&parse("(fibonacci 3)").unwrap(), scope.clone()),
-      Ok(int!(2))
-    );
-    assert_eq!(
-      evaluate(&parse("(fibonacci 4)").unwrap(), scope.clone()),
-      Ok(int!(3))
-    );
-    assert_eq!(
-      evaluate(&parse("(fibonacci 5)").unwrap(), scope.clone()),
-      Ok(int!(5))
-    );
-    assert_eq!(
-      evaluate(&parse("(fibonacci 6)").unwrap(), scope.clone()),
-      Ok(int!(8))
-    );
+    ctx.assert_eq("(fibonacci 0)", int!(0));
+    ctx.assert_eq("(fibonacci 1)", int!(1));
+    ctx.assert_eq("(fibonacci 2)", int!(1));
+    ctx.assert_eq("(fibonacci 3)", int!(2));
+    ctx.assert_eq("(fibonacci 4)", int!(3));
+    ctx.assert_eq("(fibonacci 5)", int!(5));
+    ctx.assert_eq("(fibonacci 6)", int!(8));
   }
   #[test]
   fn test_lambda_tail_call_recursion() {
-    let scope = Scope::builtins();
-    evaluate(
-      &parse(
-        "
+    let ctx = TestContext::new();
+    ctx.exec(
+      "
 (define loopy (lambda (index)
   (cond
     ((eq? index 0) 0)
     (else (loopy (- index 1)))
   )
 ))",
-      )
-      .unwrap(),
-      scope.clone(),
-    )
-    .unwrap();
-    assert_eq!(
-      evaluate(&parse("(loopy 0)").unwrap(), scope.clone()),
-      Ok(int!(0))
     );
-    assert_eq!(
-      evaluate(&parse("(loopy 1)").unwrap(), scope.clone()),
-      Ok(int!(0))
-    );
-    assert_eq!(
-      evaluate(&parse("(loopy 2)").unwrap(), scope.clone()),
-      Ok(int!(0))
-    );
+    ctx.assert_eq("(loopy 0)", int!(0));
+    ctx.assert_eq("(loopy 1)", int!(0));
+    ctx.assert_eq("(loopy 2)", int!(0));
     // This will stack overflow unless tail call recursion is working correctly
-    assert_eq!(
-      evaluate(&parse("(loopy 10000)").unwrap(), scope.clone()),
-      Ok(int!(0))
-    );
+    ctx.assert_eq("(loopy 10000)", int!(0));
   }
 }

@@ -73,109 +73,51 @@ fn _cond(
   }
 }
 
-pub const COND: Expression =
-  Expression::Procedure(Procedure::BuiltinVariableArgumentForm("cond", _cond, 0));
+pub const COND: Procedure = Procedure::BuiltinVariableArgumentForm("cond", _cond, 0);
 
 #[cfg(test)]
 mod test {
   use super::*;
-  use crate::parse::parse;
+  use crate::test::TestContext;
 
   #[test]
   fn test_evaluate_cond() {
-    let scope = Scope::builtins();
-    assert_eq!(
-      evaluate(&parse("(cond)").unwrap(), scope.clone()),
-      Ok(void!())
+    let ctx = TestContext::new();
+    ctx.assert_eq("(cond)", void!());
+    ctx.assert_err(
+      "(cond 5)",
+      EvaluationError::invalid_argument("cond", "list", &int!(5)),
     );
-    assert_eq!(
-      evaluate(&parse("(cond 5)").unwrap(), scope.clone()),
-      Err(EvaluationError::invalid_argument("cond", "list", &int!(5)))
-    );
-    assert_eq!(
-      evaluate(&parse("(cond (#t 1))").unwrap(), scope.clone()),
-      Ok(int!(1))
-    );
-    assert_eq!(
-      evaluate(&parse("(cond (#t #f))").unwrap(), scope.clone()),
-      Ok(boolean!(false))
-    );
-    assert_eq!(
-      evaluate(&parse("(cond (1 1))").unwrap(), scope.clone()),
-      Ok(int!(1))
-    );
-    assert_eq!(
-      evaluate(&parse("(cond (2 1))").unwrap(), scope.clone()),
-      Ok(int!(1))
-    );
-    assert_eq!(
-      evaluate(&parse("(cond (2))").unwrap(), scope.clone()),
-      Ok(int!(2))
-    );
-    assert_eq!(
-      evaluate(&parse("(cond (#f))").unwrap(), scope.clone()),
-      Ok(void!())
-    );
-    assert_eq!(
-      evaluate(&parse("(cond (#f #t))").unwrap(), scope.clone()),
-      Ok(void!())
-    );
-    assert_eq!(
-      evaluate(&parse("(cond (#f) (2))").unwrap(), scope.clone()),
-      Ok(int!(2))
-    );
-    assert_eq!(
-      evaluate(&parse("(cond ((eq? 1 1) 2) (3))").unwrap(), scope.clone()),
-      Ok(int!(2))
-    );
+    ctx.assert_eq("(cond (#t 1))", int!(1));
+    ctx.assert_eq("(cond (#t #f))", boolean!(false));
+    ctx.assert_eq("(cond (1 1))", int!(1));
+    ctx.assert_eq("(cond (2 1))", int!(1));
+    ctx.assert_eq("(cond (2))", int!(2));
+    ctx.assert_eq("(cond (#f))", void!());
+    ctx.assert_eq("(cond (#f #t))", void!());
+    ctx.assert_eq("(cond (#f) (2))", int!(2));
+    ctx.assert_eq("(cond ((eq? 1 1) 2) (3))", int!(2));
   }
 
   #[test]
   fn test_evaluate_cond_equal_gt() {
-    let scope = Scope::builtins();
-    assert_eq!(
-      evaluate(&parse("(cond (#t => 1))").unwrap(), scope.clone()),
-      Ok(int!(1))
-    );
-    assert_eq!(
-      evaluate(&parse("(cond (1 => 1))").unwrap(), scope.clone()),
-      Ok(int!(1))
-    );
-    assert_eq!(
-      evaluate(&parse("(cond (2 => 1))").unwrap(), scope.clone()),
-      Ok(int!(1))
-    );
-    assert_eq!(
-      evaluate(&parse("(cond (#f => #t))").unwrap(), scope.clone()),
-      Ok(void!())
-    );
-    assert_eq!(
-      evaluate(&parse("(cond (#f) (2 => 3))").unwrap(), scope.clone()),
-      Ok(int!(3))
-    );
+    let ctx = TestContext::new();
+    ctx.assert_eq("(cond (#t => 1))", int!(1));
+    ctx.assert_eq("(cond (1 => 1))", int!(1));
+    ctx.assert_eq("(cond (2 => 1))", int!(1));
+    ctx.assert_eq("(cond (#f => #t))", void!());
+    ctx.assert_eq("(cond (#f) (2 => 3))", int!(3));
   }
   #[test]
   fn test_evaluate_cond_else() {
-    let scope = Scope::builtins();
-    assert_eq!(
-      evaluate(&parse("(cond (else 1))").unwrap(), scope.clone()),
-      Ok(int!(1))
-    );
-    assert_eq!(
-      evaluate(&parse("(cond (else #f))").unwrap(), scope.clone()),
-      Ok(boolean!(false))
-    );
+    let ctx = TestContext::new();
+    ctx.assert_eq("(cond (else 1))", int!(1));
+    ctx.assert_eq("(cond (else #f))", boolean!(false));
     // TODO more else tests
-    assert_eq!(
-      evaluate(&parse("(cond (#f) (else ()))").unwrap(), scope.clone()),
-      Ok(list!())
-    );
-    assert_eq!(
-      evaluate(
-        &parse("(cond ((eq? 1 2) => 1) ((eq? 2 3) => 2) ((eq? 3 4) 3) (else 4))").unwrap(),
-        scope.clone()
-      ),
-      Ok(int!(4))
+    ctx.assert_eq("(cond (#f) (else ()))", list!());
+    ctx.assert_eq(
+      "(cond ((eq? 1 2) => 1) ((eq? 2 3) => 2) ((eq? 3 4) 3) (else 4))",
+      int!(4),
     );
   }
 }

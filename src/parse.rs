@@ -102,7 +102,7 @@ mod test {
     assert_eq!(parse("(aaa)"), Ok(list!(symbol!("aaa"))));
     assert_eq!(
       parse("  (  aaa   bbb  )  "),
-      Ok(list!(symbol!("aaa"), symbol!("bbb")))
+      Ok(list!(symbol!("aaa"), symbol!("bbb"))),
     );
     assert_eq!(parse("1"), Ok(int!(1)));
     assert_eq!(parse("99999"), Ok(int!(99999)));
@@ -118,12 +118,12 @@ mod test {
     assert_eq!(parse("'aaa"), Ok(list!(symbol!("quote"), symbol!("aaa"))));
     assert_eq!(
       parse("'(aaa)"),
-      Ok(list!(symbol!("quote"), list!(symbol!("aaa"))))
+      Ok(list!(symbol!("quote"), list!(symbol!("aaa")))),
     );
     assert_eq!(parse("( 1 . 2)"), Ok(cons!(&int!(1), &int!(2))));
     assert_eq!(
       parse("( 1 2 . 3)"),
-      Ok(cons!(&int!(1), &cons!(&int!(2), &int!(3))))
+      Ok(cons!(&int!(1), &cons!(&int!(2), &int!(3)))),
     );
     assert_eq!(parse("( 1 . . 2)"), Err(ParseError::IllegalUseOfDot));
     assert_eq!(parse("( . 2)"), Err(ParseError::IllegalUseOfDot));

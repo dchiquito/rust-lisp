@@ -3,6 +3,7 @@ mod evaluate;
 mod exec;
 mod parse;
 mod scope;
+mod test;
 mod token;
 mod types;
 

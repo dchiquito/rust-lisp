@@ -6,36 +6,20 @@ fn _eq(args: Vec<Expression>, scope: Rc<RefCell<Scope>>) -> ProcedureResult {
   Ok(ProcedureValue::Expression(boolean!(a == b)))
 }
 
-pub const EQ: Expression =
-  Expression::Procedure(Procedure::BuiltinFixedArgumentForm("eq?", _eq, 2));
+pub const EQ: Procedure = Procedure::BuiltinFixedArgumentForm("eq?", _eq, 2);
 
 #[cfg(test)]
 mod test {
   use super::*;
-  use crate::parse::parse;
+  use crate::test::TestContext;
 
   #[test]
   fn test_evaluate_eq() {
-    let scope = Scope::builtins();
-    assert_eq!(
-      evaluate(&parse("(eq? 1 1)").unwrap(), scope.clone()),
-      Ok(boolean!(true))
-    );
-    assert_eq!(
-      evaluate(&parse("(eq? 'foo 'foo)").unwrap(), scope.clone()),
-      Ok(boolean!(true))
-    );
-    assert_eq!(
-      evaluate(&parse("(eq? 'foo 'bar)").unwrap(), scope.clone()),
-      Ok(boolean!(false))
-    );
-    assert_eq!(
-      evaluate(&parse("(eq? (eq? 1 1) #t)").unwrap(), scope.clone()),
-      Ok(boolean!(true))
-    );
-    assert_eq!(
-      evaluate(&parse("(eq? (eq? 1 1) #true)").unwrap(), scope.clone()),
-      Ok(boolean!(true))
-    );
+    let ctx = TestContext::new();
+    ctx.assert_eq("(eq? 1 1)", boolean!(true));
+    ctx.assert_eq("(eq? 'foo 'foo)", boolean!(true));
+    ctx.assert_eq("(eq? 'foo 'bar)", boolean!(false));
+    ctx.assert_eq("(eq? (eq? 1 1) #t)", boolean!(true));
+    ctx.assert_eq("(eq? (eq? 1 1) #true)", boolean!(true));
   }
 }
