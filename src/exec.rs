@@ -75,3 +75,13 @@ pub fn repl() -> io::Result<()> {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_exec_file() {
+        exec_file("test/src/mergesort.lisp").unwrap();
+    }
+}
