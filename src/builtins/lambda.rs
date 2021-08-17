@@ -19,7 +19,7 @@ fn _lambda(
       symbol.clone(),
       body
     ))),
-    Expression::Cons(_) => {
+    Expression::Cons(_) | Expression::Null => {
       let mut args = vec![];
       while let Expression::Cons(cons) = formals {
         if let Expression::Symbol(symbol) = cons.car.as_ref() {
@@ -70,6 +70,7 @@ mod test {
       "((lambda (x . y) (cons x y)) 1 2 3)",
       list!(&int!(1), &int!(2), &int!(3)),
     );
+    ctx.assert_eq("((lambda () 1 2 3))", int!(3));
   }
   #[test]
   fn test_lambda_define() {
