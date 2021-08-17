@@ -84,10 +84,6 @@ mod test {
   fn test_evaluate_cond() {
     let ctx = TestContext::new();
     ctx.assert_eq("(cond)", void!());
-    ctx.assert_err(
-      "(cond 5)",
-      EvaluationError::invalid_argument("cond", "list", &int!(5)),
-    );
     ctx.assert_eq("(cond (#t 1))", int!(1));
     ctx.assert_eq("(cond (#t #f))", boolean!(false));
     ctx.assert_eq("(cond (1 1))", int!(1));
@@ -97,6 +93,23 @@ mod test {
     ctx.assert_eq("(cond (#f #t))", void!());
     ctx.assert_eq("(cond (#f) (2))", int!(2));
     ctx.assert_eq("(cond ((eq? 1 1) 2) (3))", int!(2));
+    ctx.assert_eq("(cond (#f #f) (else #f #t))", boolean!(true));
+    ctx.assert_err(
+      "(cond 5)",
+      EvaluationError::invalid_argument("cond", "list", &int!(5)),
+    );
+    ctx.assert_err(
+      "(cond ())",
+      EvaluationError::invalid_argument("cond", "clause is not a test-value pair", &list!()),
+    );
+    ctx.assert_err(
+      "(cond (else))",
+      EvaluationError::invalid_argument(
+        "cond",
+        "missing expressions in else clause",
+        &list!(&symbol!("else")),
+      ),
+    )
   }
 
   #[test]
