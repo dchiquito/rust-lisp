@@ -71,6 +71,18 @@ mod test {
       list!(&int!(1), &int!(2), &int!(3)),
     );
     ctx.assert_eq("((lambda () 1 2 3))", int!(3));
+    ctx.assert_err(
+      "((lambda (x) x))",
+      EvaluationError::WrongNumberOfArguments("#<procedure>".to_string(), 1, 0),
+    );
+    ctx.assert_err(
+      "((lambda (x) x) 1 2)",
+      EvaluationError::WrongNumberOfArguments("#<procedure>".to_string(), 1, 2),
+    );
+    ctx.assert_err(
+      "((lambda (x . y) x))",
+      EvaluationError::WrongNumberOfVariableArguments("#<procedure>".to_string(), 1, 0),
+    );
   }
   #[test]
   fn test_lambda_define() {
@@ -121,5 +133,12 @@ mod test {
     ctx.assert_eq("(loopy 2)", int!(0));
     // This will stack overflow unless tail call recursion is working correctly
     ctx.assert_eq("(loopy 10000)", int!(0));
+  }
+
+  #[test]
+  fn test_lambda_not_a_procedure() {
+    let ctx = TestContext::new();
+    ctx.exec("(define foo 1)");
+    ctx.assert_err("(foo)", EvaluationError::NotAProcedure(int!(1)));
   }
 }
