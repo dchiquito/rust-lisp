@@ -27,7 +27,9 @@ fn _lambda(
           formals = cons.cdr.as_ref();
         } else {
           return Err(EvaluationError::invalid_argument(
-            "lambda", "symbol", formals,
+            "lambda",
+            "list of symbols",
+            formals,
           ));
         }
       }
@@ -82,6 +84,18 @@ mod test {
     ctx.assert_err(
       "((lambda (x . y) x))",
       EvaluationError::WrongNumberOfVariableArguments("#<procedure>".to_string(), 1, 0),
+    );
+    ctx.assert_err(
+      "(lambda 1 1)",
+      EvaluationError::invalid_argument("lambda", "list", &int!(1)),
+    );
+    ctx.assert_err(
+      "(lambda (1) 1)",
+      EvaluationError::invalid_argument("lambda", "list of symbols", &list!(&int!(1))),
+    );
+    ctx.assert_err(
+      "(lambda (x . 2) 2)",
+      EvaluationError::invalid_argument("lambda", "symbol", &int!(2)),
     );
   }
   #[test]
