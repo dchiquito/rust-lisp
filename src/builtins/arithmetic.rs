@@ -3,50 +3,50 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 fn _add(
-  args: Vec<Expression>,
+  _args: Vec<Expression>,
   varargs: Vec<Expression>,
   scope: Rc<RefCell<Scope>>,
 ) -> ProcedureResult {
-  let sum = evaluate(args.get(0).unwrap(), scope.clone())?;
-  if let Expression::Number(Number::Integer(mut sum)) = sum {
-    for arg in varargs {
-      let term = evaluate(&arg, scope.clone())?;
-      if let Expression::Number(Number::Integer(integer)) = term {
-        sum += integer;
-      } else {
-        return Err(EvaluationError::invalid_argument("+", "number", &term));
-      }
-    }
-    Ok(ProcedureValue::Expression(int!(sum)))
-  } else {
-    Err(EvaluationError::invalid_argument("+", "number", &sum))
-  }
+  return varargs
+    .iter()
+    .map(|expression| match evaluate(expression, scope.clone())? {
+      Expression::Number(Number::Integer(number)) => Ok(number),
+      non_number => Err(EvaluationError::invalid_argument(
+        "+",
+        "number",
+        &non_number,
+      )),
+    })
+    .reduce(|left, right| Ok(left? + right?))
+    .or(Some(Ok(0)))
+    .unwrap()
+    .map(|sum| ProcedureValue::Expression(Expression::Number(Number::Integer(sum))));
 }
 
-pub const ADD: Procedure = Procedure::BuiltinVariableArgumentForm("+", _add, 1);
+pub const ADD: Procedure = Procedure::BuiltinVariableArgumentForm("+", _add, 0);
 
 pub fn _multiply(
-  args: Vec<Expression>,
+  _args: Vec<Expression>,
   varargs: Vec<Expression>,
   scope: Rc<RefCell<Scope>>,
 ) -> ProcedureResult {
-  let product = evaluate(args.get(0).unwrap(), scope.clone())?;
-  if let Expression::Number(Number::Integer(mut product)) = product {
-    for arg in varargs {
-      let term = evaluate(&arg, scope.clone())?;
-      if let Expression::Number(Number::Integer(integer)) = term {
-        product *= integer;
-      } else {
-        return Err(EvaluationError::invalid_argument("*", "number", &term));
-      }
-    }
-    Ok(ProcedureValue::Expression(int!(product)))
-  } else {
-    Err(EvaluationError::invalid_argument("*", "number", &product))
-  }
+  return varargs
+    .iter()
+    .map(|expression| match evaluate(expression, scope.clone())? {
+      Expression::Number(Number::Integer(number)) => Ok(number),
+      non_number => Err(EvaluationError::invalid_argument(
+        "*",
+        "number",
+        &non_number,
+      )),
+    })
+    .reduce(|left, right| Ok(left? * right?))
+    .or(Some(Ok(1)))
+    .unwrap()
+    .map(|sum| ProcedureValue::Expression(Expression::Number(Number::Integer(sum))));
 }
 
-pub const MULTIPLY: Procedure = Procedure::BuiltinVariableArgumentForm("*", _multiply, 1);
+pub const MULTIPLY: Procedure = Procedure::BuiltinVariableArgumentForm("*", _multiply, 0);
 
 pub fn _subtract(
   args: Vec<Expression>,
@@ -127,10 +127,7 @@ mod test {
     ctx.assert_eq("(+ 1)", int!(1));
     ctx.assert_eq("(+ 0 0 0 0)", int!(0));
     ctx.assert_eq("(+ (+ 1 2) (+ 3 4))", int!(10));
-    ctx.assert_err(
-      "(+)",
-      EvaluationError::WrongNumberOfVariableArguments("+".to_string(), 1, 0),
-    );
+    ctx.assert_eq("(+)", int!(0));
     ctx.assert_err(
       "(+ ())",
       EvaluationError::invalid_argument("+", "number", &null!()),
@@ -151,10 +148,7 @@ mod test {
     ctx.assert_eq("(* 1)", int!(1));
     ctx.assert_eq("(* 0 0 0 0)", int!(0));
     ctx.assert_eq("(* (* 1 2) (* 3 4))", int!(24));
-    ctx.assert_err(
-      "(*)",
-      EvaluationError::WrongNumberOfVariableArguments("*".to_string(), 1, 0),
-    );
+    ctx.assert_eq("(*)", int!(1));
     ctx.assert_err(
       "(* ())",
       EvaluationError::invalid_argument("*", "number", &null!()),
@@ -181,6 +175,10 @@ mod test {
     );
     ctx.assert_err(
       "(- ())",
+      EvaluationError::invalid_argument("-", "number", &null!()),
+    );
+    ctx.assert_err(
+      "(- 4 ())",
       EvaluationError::invalid_argument("-", "number", &null!()),
     );
     // Test an improper list
@@ -210,6 +208,10 @@ mod test {
     );
     ctx.assert_err(
       "(/ ())",
+      EvaluationError::invalid_argument("/", "number", &null!()),
+    );
+    ctx.assert_err(
+      "(/ 4 ())",
       EvaluationError::invalid_argument("/", "number", &null!()),
     );
     // Test an improper list
