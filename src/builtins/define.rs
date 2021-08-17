@@ -25,6 +25,7 @@ mod test {
     ctx.assert_eq("(define foo (+ 1 1))", void!());
     assert_eq!(ctx.scope.borrow().lookup(&String::from("foo")), Ok(int!(2)));
     ctx.assert_eq("foo", int!(2));
+    ctx.assert_err("bar", EvaluationError::UndefinedSymbol("bar".to_string()));
   }
   #[test]
   fn test_evaluate_define_arguments() {
