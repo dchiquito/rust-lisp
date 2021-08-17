@@ -4,7 +4,7 @@ use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 pub struct Cons {
   pub car: Box<Expression>,
   pub cdr: Box<Expression>,
@@ -48,8 +48,13 @@ impl fmt::Display for Cons {
     self.fmt_as_inner_element(f)
   }
 }
+impl fmt::Debug for Cons {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    write!(f, "{}", self)
+  }
+}
 
-#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Number {
   Integer(i32),
 }
@@ -61,8 +66,13 @@ impl fmt::Display for Number {
     }
   }
 }
+impl fmt::Debug for Number {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    write!(f, "{}", self)
+  }
+}
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 pub enum Procedure {
   FixedArgumentForm(Vec<String>, Vec<Expression>),
   VariableArgumentForm(Vec<String>, String, Vec<Expression>),
@@ -88,8 +98,27 @@ impl Procedure {
     }
   }
 }
+impl fmt::Display for Procedure {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    match self {
+      Procedure::FixedArgumentForm(_, _) => write!(f, "#<procedure>"),
+      Procedure::VariableArgumentForm(_, _, _) => write!(f, "#<procedure>"),
+      Procedure::BuiltinFixedArgumentForm(procedure_name, _, _) => {
+        write!(f, "#<procedure:{}>", procedure_name)
+      }
+      Procedure::BuiltinVariableArgumentForm(procedure_name, _, _) => {
+        write!(f, "#<procedure:{}>", procedure_name)
+      }
+    }
+  }
+}
+impl fmt::Debug for Procedure {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    write!(f, "{}", self)
+  }
+}
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 pub enum Expression {
   Symbol(String),
   Cons(Cons),
@@ -113,19 +142,15 @@ impl fmt::Display for Expression {
           write!(f, "#f")
         }
       }
-      Expression::Procedure(procedure) => match procedure {
-        Procedure::FixedArgumentForm(_, _) => write!(f, "#<procedure>"),
-        Procedure::VariableArgumentForm(_, _, _) => write!(f, "#<procedure>"),
-        Procedure::BuiltinFixedArgumentForm(procedure_name, _, _) => {
-          write!(f, "#<procedure:{}>", procedure_name)
-        }
-        Procedure::BuiltinVariableArgumentForm(procedure_name, _, _) => {
-          write!(f, "#<procedure:{}>", procedure_name)
-        }
-      },
+      Expression::Procedure(procedure) => write!(f, "{}", procedure),
       Expression::Null => write!(f, "'()"),
       Expression::Void => write!(f, "#<void>"),
     }
+  }
+}
+impl fmt::Debug for Expression {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    write!(f, "{}", self)
   }
 }
 
@@ -142,16 +167,7 @@ impl Expression {
           "#f".to_string()
         }
       }
-      Expression::Procedure(procedure) => match procedure {
-        Procedure::FixedArgumentForm(_, _) => "#<procedure>".to_string(),
-        Procedure::VariableArgumentForm(_, _, _) => "#<procedure>".to_string(),
-        Procedure::BuiltinFixedArgumentForm(procedure_name, _, _) => {
-          format!("#<procedure:{}>", procedure_name)
-        }
-        Procedure::BuiltinVariableArgumentForm(procedure_name, _, _) => {
-          format!("#<procedure:{}>", procedure_name)
-        }
-      },
+      Expression::Procedure(procedure) => format!("{}", procedure),
       Expression::Null => "'()".to_string(),
       Expression::Void => "#<void>".to_string(),
     }
