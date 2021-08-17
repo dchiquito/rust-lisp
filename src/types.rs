@@ -4,7 +4,7 @@ use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Cons {
   pub car: Box<Expression>,
   pub cdr: Box<Expression>,
@@ -43,12 +43,6 @@ impl Cons {
 }
 
 impl fmt::Display for Cons {
-  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    write!(f, "(")?;
-    self.fmt_as_inner_element(f)
-  }
-}
-impl fmt::Debug for Cons {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     write!(f, "(")?;
     self.fmt_as_inner_element(f)
@@ -95,7 +89,7 @@ impl Procedure {
   }
 }
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Expression {
   Symbol(String),
   Cons(Cons),
@@ -106,34 +100,6 @@ pub enum Expression {
   Void,
 }
 
-impl fmt::Debug for Expression {
-  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    match self {
-      Expression::Symbol(symbol) => write!(f, "{}", symbol),
-      Expression::Cons(cons) => write!(f, "{}", cons),
-      Expression::Number(number) => write!(f, "{}", number),
-      Expression::Boolean(boolean) => {
-        if *boolean {
-          write!(f, "#t")
-        } else {
-          write!(f, "#f")
-        }
-      }
-      Expression::Procedure(procedure) => match procedure {
-        Procedure::FixedArgumentForm(_, _) => write!(f, "#<procedure>"),
-        Procedure::VariableArgumentForm(_, _, _) => write!(f, "#<procedure>"),
-        Procedure::BuiltinFixedArgumentForm(procedure_name, _, _) => {
-          write!(f, "#<procedure:{}>", procedure_name)
-        }
-        Procedure::BuiltinVariableArgumentForm(procedure_name, _, _) => {
-          write!(f, "#<procedure:{}>", procedure_name)
-        }
-      },
-      Expression::Null => write!(f, "'()"),
-      Expression::Void => write!(f, "#<void>"),
-    }
-  }
-}
 impl fmt::Display for Expression {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     match self {
@@ -255,4 +221,54 @@ macro_rules! void {
   () => {
     Expression::Void
   };
+}
+
+#[cfg(test)]
+mod test {
+  use super::*;
+
+  macro_rules! assert_expr_eq {
+    ($expression:expr, $display:expr, $outer_representation:expr) => {{
+      assert_eq!(format!("{}", $expression), $display);
+      assert_eq!(format!("{:?}", $expression), $display);
+      assert_eq!($expression.outer_representation(), $outer_representation);
+    }};
+  }
+
+  #[test]
+  fn test_fmt_symbol() {
+    assert_expr_eq!(symbol!("foo"), "foo", "'foo");
+  }
+
+  #[test]
+  fn test_fmt_cons() {
+    assert_expr_eq!(cons!(&int!(1), &null!()), "(1)", "'(1)");
+    assert_expr_eq!(cons!(&int!(1), &int!(2)), "(1 . 2)", "'(1 . 2)");
+    assert_expr_eq!(list!(&int!(1), &int!(2), &int!(3)), "(1 2 3)", "'(1 2 3)");
+  }
+
+  #[test]
+  fn test_fmt_number() {
+    assert_expr_eq!(int!(1), "1", "1");
+    assert_expr_eq!(int!(0), "0", "0");
+    assert_expr_eq!(int!(2), "2", "2");
+    assert_expr_eq!(int!(-3), "-3", "-3");
+    assert_expr_eq!(int!(987654321), "987654321", "987654321");
+  }
+
+  #[test]
+  fn test_fmt_boolean() {
+    assert_expr_eq!(boolean!(true), "#t", "#t");
+    assert_expr_eq!(boolean!(false), "#f", "#f");
+  }
+
+  #[test]
+  fn test_fmt_null() {
+    assert_expr_eq!(null!(), "'()", "'()");
+  }
+
+  #[test]
+  fn test_fmt_void() {
+    assert_expr_eq!(void!(), "#<void>", "#<void>");
+  }
 }
