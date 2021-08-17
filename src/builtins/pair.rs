@@ -51,6 +51,10 @@ mod test {
     ctx.assert_eq("(car '(1))", int!(1));
     ctx.assert_eq("(car '(1 2 3))", int!(1));
     ctx.assert_eq("(car (cons 'foo 'bar))", symbol!("foo"));
+    ctx.assert_err(
+      "(car 1)",
+      EvaluationError::invalid_argument("car", "list", &int!(1)),
+    );
   }
   #[test]
   fn test_cdr() {
@@ -58,5 +62,9 @@ mod test {
     ctx.assert_eq("(cdr '(1))", null!());
     ctx.assert_eq("(cdr '(1 2 3))", list!(int!(2), int!(3)));
     ctx.assert_eq("(cdr (cons 'foo 'bar))", symbol!("bar"));
+    ctx.assert_err(
+      "(cdr 1)",
+      EvaluationError::invalid_argument("cdr", "list", &int!(1)),
+    );
   }
 }
