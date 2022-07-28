@@ -1,6 +1,7 @@
 use crate::evaluate::ProcedureResult;
 use crate::Scope;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::fmt;
 use std::rc::Rc;
 
@@ -118,6 +119,60 @@ impl fmt::Debug for Procedure {
   }
 }
 
+
+
+
+
+pub type Bindings = HashMap<String, Expression>;
+// #[derive(Debug)]
+// pub struct Bindings {
+//     bindings: HashMap<String, Expression>,
+// }
+// impl Bindings {
+//     pub fn new() -> Bindings {
+//       Bindings {
+//         bindings: HashMap::new(),
+//       }
+//     }
+//     pub fn bind(&mut self, variable: &str, value: Expression) {
+//         self.bindings.insert(String::from(variable), value);
+//     }
+//     pub fn get(&self, globals: &Bindings, variable: &str) -> Option<Expression> {
+//         // self.frames.last().map(|frame| frame.get(variable)).unwrap_or(self.global.get(variable))
+//         self.bindings.get(variable).or_else(|| globals.bindings.get(variable)).map(|value| value.clone())
+//     }
+// }
+#[derive(Clone, Eq, PartialEq, Debug)]
+pub struct LambdaProcedure {
+  program: Box<Expression>,
+  argnames: Vec<String>,
+}
+#[derive(Clone, Eq, PartialEq, Debug)]
+pub struct BuiltinProcedure {
+  pub program: fn(Bindings) -> Expression,
+  pub argnames: Vec<String>,
+  pub ticks: i32,
+}
+#[derive(Clone, Eq, PartialEq, Debug)]
+pub enum MyProcedure {
+  LambdaProcedure(LambdaProcedure),
+  BuiltinProcedure(BuiltinProcedure),
+}
+impl MyProcedure {
+  pub fn argnames(&self) -> Vec<String> {
+    match self {
+      MyProcedure::LambdaProcedure(lambda) => lambda.argnames.clone(),
+      MyProcedure::BuiltinProcedure(builtin) => builtin.argnames.clone(),
+    }
+  }
+}
+
+
+
+
+
+
+
 #[derive(Clone, Eq, PartialEq)]
 pub enum Expression {
   Symbol(String),
@@ -127,6 +182,7 @@ pub enum Expression {
   Procedure(Procedure),
   Null,
   Void,
+  MyProcedure(MyProcedure),
 }
 
 impl fmt::Display for Expression {
@@ -145,6 +201,7 @@ impl fmt::Display for Expression {
       Expression::Procedure(procedure) => write!(f, "{}", procedure),
       Expression::Null => write!(f, "'()"),
       Expression::Void => write!(f, "#<void>"),
+      Expression::MyProcedure(procedure) => write!(f, "MYSTERIOUS myprocedure"),
     }
   }
 }
@@ -170,6 +227,7 @@ impl Expression {
       Expression::Procedure(procedure) => format!("{}", procedure),
       Expression::Null => "'()".to_string(),
       Expression::Void => "#<void>".to_string(),
+      Expression::MyProcedure(procedure) => "mysterious myprocedure".to_string(),
     }
   }
 }

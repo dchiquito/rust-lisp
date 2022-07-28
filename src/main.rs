@@ -1,3 +1,4 @@
+mod asynceval;
 mod builtins;
 mod evaluate;
 mod exec;
