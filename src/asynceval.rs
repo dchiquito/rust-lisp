@@ -6,15 +6,15 @@ Planning
 Basic types
 Bindings - just a HashMap<String, Expression>
 Procedure - enum of lambdas and builtins. Lambdas always take evaluated arguments, but some builtins take in the arguments without evaluating them (like quote).
-EvaluateFrame - an expression and a Bindings. tick behavior depends on type:
+EvaluateFrame - an expression to be evaluated. tick behavior depends on type:
     If it's a primitive, it is pushed into the parent frame, because the parent frame asked for it to be evaluated.
     If it's a procedure call, it is converted into an ArgParseFrame.
-ArgParseFrame - a Procedure, an outer Bindings, an inner Bindings, a list of argument names, and a cons list of provided arguments.
+ArgParseFrame - a Procedure, a Bindings that is being generated, a list of argument names, and a cons list of provided arguments.
         If argnames+args are non-empty, then the first arg is popped off.
             If it is a primitive, it is assigned to the argname in the inner binding and the tick completes.
             If it is procedure call, then a new Frame is pushed calling that procedure.
-                When that procedure completes in a future tick, the argname is popped off and the return value assigned in the inner binding.
-        If argnames+args are both empty, then a new *CallFrame invoking the procedure replaces this Frame.
+                When that procedure completes in a future tick, the argname is popped off and the return value assigned to the Bindings.
+        If argnames+args are both empty, then the completed Bindings is pushed on to the binding stack and a new *CallFrame invoking the procedure replaces this Frame.
 BuiltinCallFrame - a BuiltinProcedure, a Bindings, and a tick counter
     Builtins are easy, they just idle until their tick timer lapses, then return the result of calling the rust function.
 LambdaCallFrame - a cons list of expressions to evaluate and a Bindings.
@@ -42,7 +42,7 @@ impl FrameTrait for EvaluateFrame {
                 let args = cons.cdr.as_ref().clone();
                 match expr {
                     Expression::Symbol(procedure_name) => {
-                        let procedure = state.get(&procedure_name).unwrap();
+                        let procedure = state.bindings.get(&procedure_name).unwrap();
                         match procedure {
                             Expression::MyProcedure(procedure) => {
                                 state.parse_args(procedure.clone(), args)
@@ -77,7 +77,7 @@ pub fn arg_vec(
 #[derive(Debug)]
 struct ArgParseFrame {
     procedure: MyProcedure,
-    new_bindings: Bindings,
+    new_bindings: BindingLayer,
     argnames: VecDeque<String>,
     arguments: VecDeque<Expression>,
 }
@@ -86,7 +86,7 @@ impl ArgParseFrame {
         ArgParseFrame {
             argnames: VecDeque::from(procedure.argnames()),
             procedure,
-            new_bindings: Bindings::new(),
+            new_bindings: BindingLayer::new(),
             arguments: arg_vec(&arguments),
         }
     }
@@ -134,8 +134,9 @@ impl FrameTrait for BuiltinCallFrame {
             state.push_frame(Frame::BuiltinCallFrame(self))
         } else {
             println!("returno");
-            let prog = self.procedure.program;
-            let value = prog(state.bindings.last().unwrap().clone());
+            let program = self.procedure.program;
+            let (value, new_bindings) = program(state.bindings);
+            state.bindings = new_bindings;
             state.pass_value_up(value)
         }
     }
@@ -178,8 +179,7 @@ impl Frame {
 
 #[derive(Debug)]
 struct State {
-    globals: Bindings,
-    bindings: Vec<Bindings>,
+    bindings: Bindings,
     frames: Vec<Frame>,
     value: Option<Expression>,
 }
@@ -196,19 +196,6 @@ impl State {
         self.frames.push(frame);
         self
     }
-    fn push_bindings(&mut self, bindings: Bindings) {
-        self.bindings.push(bindings);
-    }
-    fn pop_bindings(&mut self) {
-        self.bindings.pop();
-    }
-    fn bind(&mut self, variable: &str, value: Expression) {
-        let bindopt = self.bindings.last_mut().unwrap_or(&mut self.globals);
-        bindopt.insert(String::from(variable), value);
-    }
-    fn get(&self, variable: &str) -> Option<Expression> {
-        self.bindings.last().unwrap_or(&self.globals).get(variable).map(|value| value.clone())
-    }
     fn parse_args(mut self, procedure: MyProcedure, arguments: Expression) -> State {
         self.push_frame(Frame::ArgParseFrame(ArgParseFrame::new(procedure, arguments)))
     }
@@ -220,8 +207,8 @@ impl State {
         }
         self
     }
-    fn invoke(mut self, procedure: MyProcedure, bindings: Bindings) -> State {
-        self.push_bindings(bindings);
+    fn invoke(mut self, procedure: MyProcedure, bindings: BindingLayer) -> State {
+        self.bindings.push(bindings);
         let frame = match procedure {
             MyProcedure::BuiltinProcedure(builtin) => BuiltinCallFrame::new(builtin),
             MyProcedure::LambdaProcedure(lambda) => LambdaCallFrame::new(lambda),
@@ -237,8 +224,7 @@ mod test {
     #[test]
     fn test_foo() {
         let mut state = State {
-            globals: Bindings::new(),
-            bindings: vec![],
+            bindings: Bindings::new(),
             frames: vec![],
             value: None,
         };
@@ -246,7 +232,7 @@ mod test {
             Frame::EvaluateFrame(EvaluateFrame {
                 expression: list!(
                     Expression::MyProcedure(MyProcedure::BuiltinProcedure(BuiltinProcedure {
-                        program: |bindings| bindings.get("b").unwrap().clone(),
+                        program: |bindings| (bindings.get("b").unwrap().clone(), bindings),
                         argnames: vec!["a".to_string(), "b".to_string()],
                         ticks: 6,
                     })),

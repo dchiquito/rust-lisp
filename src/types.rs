@@ -119,29 +119,38 @@ impl fmt::Debug for Procedure {
   }
 }
 
-
-
-
-
-pub type Bindings = HashMap<String, Expression>;
-// #[derive(Debug)]
-// pub struct Bindings {
-//     bindings: HashMap<String, Expression>,
-// }
-// impl Bindings {
-//     pub fn new() -> Bindings {
-//       Bindings {
-//         bindings: HashMap::new(),
-//       }
-//     }
-//     pub fn bind(&mut self, variable: &str, value: Expression) {
-//         self.bindings.insert(String::from(variable), value);
-//     }
-//     pub fn get(&self, globals: &Bindings, variable: &str) -> Option<Expression> {
-//         // self.frames.last().map(|frame| frame.get(variable)).unwrap_or(self.global.get(variable))
-//         self.bindings.get(variable).or_else(|| globals.bindings.get(variable)).map(|value| value.clone())
-//     }
-// }
+pub type BindingLayer = HashMap<String, Expression>;
+#[derive(Debug)]
+pub struct Bindings {
+  globals: BindingLayer,
+  stack: Vec<BindingLayer>,
+}
+impl Bindings {
+  pub fn new() -> Bindings {
+    Bindings {
+      globals: BindingLayer::new(),
+      stack: vec![],
+    }
+  }
+  pub fn bind(&mut self, variable: &str, value: Expression) {
+    let bindopt = self.stack.last_mut().unwrap_or(&mut self.globals);
+    bindopt.insert(String::from(variable), value);
+  }
+  pub fn get(&self, variable: &str) -> Option<Expression> {
+    self
+      .stack
+      .last()
+      .unwrap_or(&self.globals)
+      .get(variable)
+      .map(|value| value.clone())
+  }
+  pub fn push(&mut self, bindings: BindingLayer) {
+    self.stack.push(bindings);
+  }
+  pub fn pop(&mut self) {
+    self.stack.pop();
+  }
+}
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct LambdaProcedure {
   program: Box<Expression>,
@@ -149,7 +158,7 @@ pub struct LambdaProcedure {
 }
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct BuiltinProcedure {
-  pub program: fn(Bindings) -> Expression,
+  pub program: fn(Bindings) -> (Expression, Bindings),
   pub argnames: Vec<String>,
   pub ticks: i32,
 }
@@ -166,12 +175,6 @@ impl MyProcedure {
     }
   }
 }
-
-
-
-
-
-
 
 #[derive(Clone, Eq, PartialEq)]
 pub enum Expression {
