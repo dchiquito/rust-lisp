@@ -1,5 +1,5 @@
-use std::collections::VecDeque;
 use crate::*;
+use std::collections::VecDeque;
 
 /*
 Planning
@@ -54,14 +54,12 @@ impl FrameTrait for EvaluateFrame {
                     _ => panic!("non-symbol"),
                 }
             }
-            expr => state.pass_value_up(expr), // TODO return the value up the stack
+            expr => state.pass_value_up(expr),
         }
     }
 }
 
-pub fn arg_vec(
-    list: &Expression,
-) -> VecDeque<Expression> {
+pub fn arg_vec(list: &Expression) -> VecDeque<Expression> {
     let mut args = VecDeque::from([]);
     let mut sublist = list;
     while let Expression::Cons(cons) = sublist {
@@ -107,7 +105,9 @@ impl FrameTrait for ArgParseFrame {
         } else {
             let arg_expression = self.arguments.pop_front().unwrap();
             state = state.push_frame(Frame::ArgParseFrame(self));
-            state.push_frame(Frame::EvaluateFrame(EvaluateFrame {expression: arg_expression}))
+            state.push_frame(Frame::EvaluateFrame(EvaluateFrame {
+                expression: arg_expression,
+            }))
         }
     }
 }
@@ -184,6 +184,16 @@ struct State {
     value: Option<Expression>,
 }
 impl State {
+    pub fn empty() -> State {
+        State {
+            bindings: Bindings::new(),
+            frames: vec![],
+            value: None,
+        }
+    }
+    pub fn begin(mut self, expression: Expression) -> State {
+        self.push_frame(Frame::EvaluateFrame(EvaluateFrame {expression}))
+    }
     pub fn tick(mut self) -> State {
         if self.value.is_none() {
             let frame = self.frames.pop().unwrap();
@@ -192,14 +202,22 @@ impl State {
             self
         }
     }
+    pub fn run_to_completion(mut self) -> State {
+        while self.value == None {
+            self = self.tick();
+        }
+        self
+    }
     fn push_frame(mut self, frame: Frame) -> State {
         self.frames.push(frame);
         self
     }
     fn parse_args(mut self, procedure: MyProcedure, arguments: Expression) -> State {
-        self.push_frame(Frame::ArgParseFrame(ArgParseFrame::new(procedure, arguments)))
+        self.push_frame(Frame::ArgParseFrame(ArgParseFrame::new(
+            procedure, arguments,
+        )))
     }
-    fn pass_value_up(mut self, value: Expression) -> State{
+    fn pass_value_up(mut self, value: Expression) -> State {
         if let Some(frame) = self.frames.last_mut() {
             frame.take_value(value);
         } else {
@@ -223,53 +241,27 @@ mod test {
 
     #[test]
     fn test_foo() {
-        let mut state = State {
-            bindings: Bindings::new(),
-            frames: vec![],
-            value: None,
-        };
-        state = state.push_frame(
-            Frame::EvaluateFrame(EvaluateFrame {
-                expression: list!(
-                    Expression::MyProcedure(MyProcedure::BuiltinProcedure(BuiltinProcedure {
-                        program: |bindings| (bindings.get("b").unwrap().clone(), bindings),
-                        argnames: vec!["a".to_string(), "b".to_string()],
-                        ticks: 6,
-                    })),
-                    int!(2),
-                    int!(3)
-                ),
-            })
-        );
+        // let mut state = State::empty().begin(
+        //     list!(
+        //         Expression::MyProcedure(MyProcedure::BuiltinProcedure(BuiltinProcedure {
+        //             program: |bindings| (bindings.get("b").unwrap().clone(), bindings),
+        //             argnames: vec!["a".to_string(), "b".to_string()],
+        //             ticks: 6,
+        //         })),
+        //         int!(2),
+        //         int!(3)
+        //     ),
+        // );
+        let mut state = State::empty();
+        state.bindings.bind("foo", Expression::MyProcedure(MyProcedure::BuiltinProcedure(BuiltinProcedure {
+            program: |bindings| (bindings.get("a").unwrap().clone(), bindings),
+            argnames: vec!["a".to_string()],
+            ticks: 5,
+        })));
+        state = state.begin(parse("(foo 6)").unwrap());
         println!("{:?}\n", state);
-        state = state.tick();
+        state = state.run_to_completion();
         println!("{:?}\n", state);
-        state = state.tick();
-        println!("{:?}\n", state);
-        state = state.tick();
-        println!("{:?}\n", state);
-        state = state.tick();
-        println!("{:?}\n", state);
-        state = state.tick();
-        println!("{:?}\n", state);
-        state = state.tick();
-        println!("{:?}\n", state);
-        state = state.tick();
-        println!("{:?}\n", state);
-        state = state.tick();
-        println!("{:?}\n", state);
-        state = state.tick();
-        println!("{:?}\n", state);
-        state = state.tick();
-        println!("{:?}\n", state);
-        state = state.tick();
-        println!("{:?}\n", state);
-        state = state.tick();
-        println!("{:?}\n", state);
-        state = state.tick();
-        println!("{:?}\n", state);
-        state = state.tick();
-        println!("{:?}\n", state);
-        assert_eq!(1,2)
+        assert_eq!(state.value, Some(int!(6)))
     }
 }
