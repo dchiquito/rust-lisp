@@ -239,43 +239,6 @@ impl State {
 mod test {
     use super::*;
 
-    #[macro_export]
-    macro_rules! _builtin_arg_type {
-        ($bindings:ident => $argname:ident : Number) => {
-            let $argname = match $bindings.get(stringify!($argname)).unwrap().clone() {
-                Expression::Number(Number::Integer(integer)) => integer,
-                _ => panic!("Not an integer"),
-            };
-        };
-        ($bindings:ident => $argname:ident : Any) => {
-            let $argname = $bindings.get(stringify!($argname)).unwrap().clone();
-        };
-    }
-
-    #[macro_export]
-    macro_rules! builtin {
-    //   ($arg:expr, $body:expr) => {
-    //     Expression::Procedure(Procedure::FixedArgumentForm($arg, $body))
-    //   };
-    //   ($arg:expr , $vararg:expr, $body:expr) => {
-    //     Expression::Procedure(Procedure::VariableArgumentForm($arg, $vararg, $body))
-    //   };
-        (fn $name:ident ($($argname:ident : $argtype:ident),*) {$(let $var:ident = $val:expr);* ; $return_line:expr}) => {
-            Expression::Procedure(Procedure::BuiltinProcedure(BuiltinProcedure {
-                program: |bindings| {
-                    $(
-                        // let $argname = bindings.get(stringify!($argname)).unwrap().clone();
-                        _builtin_arg_type!(bindings => $argname:$argtype);
-                    )*
-                    $(let $var = $val;)*
-                    ($return_line, bindings)
-                },
-                argnames: vec![$(stringify!($argname).to_string()),*],
-                ticks: 5,
-            }))
-        };
-    }
-
     #[test]
     fn test_foo() {
         let mut state = State::empty();
@@ -285,9 +248,7 @@ mod test {
         //     ticks: 5,
         // })));
         state.bindings.bind("pass", builtin!{
-            fn double (b:Any) {
-                ;b
-            }
+            fn add (a:Number, b:Number) => int!(a+b)
         });
         state = state.begin(parse("(pass 7)").unwrap());
         println!("{:?}\n", state);
