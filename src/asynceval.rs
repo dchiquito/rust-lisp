@@ -44,13 +44,13 @@ impl FrameTrait for EvaluateFrame {
                     Expression::Symbol(procedure_name) => {
                         let procedure = state.bindings.get(&procedure_name).unwrap();
                         match procedure {
-                            Expression::MyProcedure(procedure) => {
+                            Expression::Procedure(procedure) => {
                                 state.parse_args(procedure.clone(), args)
                             }
                             _ => panic!("non-procedure"),
                         }
                     }
-                    Expression::MyProcedure(procedure) => state.parse_args(procedure, args),
+                    Expression::Procedure(procedure) => state.parse_args(procedure, args),
                     _ => panic!("non-symbol"),
                 }
             }
@@ -74,13 +74,13 @@ pub fn arg_vec(list: &Expression) -> VecDeque<Expression> {
 
 #[derive(Debug)]
 struct ArgParseFrame {
-    procedure: MyProcedure,
+    procedure: Procedure,
     new_bindings: BindingLayer,
     argnames: VecDeque<String>,
     arguments: VecDeque<Expression>,
 }
 impl ArgParseFrame {
-    fn new(procedure: MyProcedure, arguments: Expression) -> ArgParseFrame {
+    fn new(procedure: Procedure, arguments: Expression) -> ArgParseFrame {
         ArgParseFrame {
             argnames: VecDeque::from(procedure.argnames()),
             procedure,
@@ -212,7 +212,7 @@ impl State {
         self.frames.push(frame);
         self
     }
-    fn parse_args(mut self, procedure: MyProcedure, arguments: Expression) -> State {
+    fn parse_args(mut self, procedure: Procedure, arguments: Expression) -> State {
         self.push_frame(Frame::ArgParseFrame(ArgParseFrame::new(
             procedure, arguments,
         )))
@@ -225,11 +225,11 @@ impl State {
         }
         self
     }
-    fn invoke(mut self, procedure: MyProcedure, bindings: BindingLayer) -> State {
+    fn invoke(mut self, procedure: Procedure, bindings: BindingLayer) -> State {
         self.bindings.push(bindings);
         let frame = match procedure {
-            MyProcedure::BuiltinProcedure(builtin) => BuiltinCallFrame::new(builtin),
-            MyProcedure::LambdaProcedure(lambda) => LambdaCallFrame::new(lambda),
+            Procedure::BuiltinProcedure(builtin) => BuiltinCallFrame::new(builtin),
+            Procedure::LambdaProcedure(lambda) => LambdaCallFrame::new(lambda),
         };
         self.push_frame(frame)
     }
@@ -242,7 +242,7 @@ mod test {
     #[test]
     fn test_foo() {
         let mut state = State::empty();
-        state.bindings.bind("foo", Expression::MyProcedure(MyProcedure::BuiltinProcedure(BuiltinProcedure {
+        state.bindings.bind("foo", Expression::Procedure(Procedure::BuiltinProcedure(BuiltinProcedure {
             program: |bindings| (bindings.get("a").unwrap().clone(), bindings),
             argnames: vec!["a".to_string()],
             ticks: 5,

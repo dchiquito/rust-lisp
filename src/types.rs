@@ -73,51 +73,51 @@ impl fmt::Debug for Number {
   }
 }
 
-#[derive(Clone, Eq, PartialEq)]
-pub enum Procedure {
-  FixedArgumentForm(Vec<String>, Vec<Expression>),
-  VariableArgumentForm(Vec<String>, String, Vec<Expression>),
-  BuiltinFixedArgumentForm(
-    &'static str,
-    fn(Vec<Expression>, Rc<RefCell<Scope>>) -> ProcedureResult,
-    usize,
-  ),
-  #[allow(clippy::type_complexity)]
-  BuiltinVariableArgumentForm(
-    &'static str,
-    fn(Vec<Expression>, Vec<Expression>, Rc<RefCell<Scope>>) -> ProcedureResult,
-    usize,
-  ),
-}
-impl Procedure {
-  pub fn name(&self) -> String {
-    match self {
-      Procedure::FixedArgumentForm(_, _) => "#<procedure>".to_string(),
-      Procedure::VariableArgumentForm(_, _, _) => "#<procedure>".to_string(),
-      Procedure::BuiltinFixedArgumentForm(procedure_name, _, _) => procedure_name.to_string(),
-      Procedure::BuiltinVariableArgumentForm(procedure_name, _, _) => procedure_name.to_string(),
-    }
-  }
-}
-impl fmt::Display for Procedure {
-  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    match self {
-      Procedure::FixedArgumentForm(_, _) => write!(f, "#<procedure>"),
-      Procedure::VariableArgumentForm(_, _, _) => write!(f, "#<procedure>"),
-      Procedure::BuiltinFixedArgumentForm(procedure_name, _, _) => {
-        write!(f, "#<procedure:{}>", procedure_name)
-      }
-      Procedure::BuiltinVariableArgumentForm(procedure_name, _, _) => {
-        write!(f, "#<procedure:{}>", procedure_name)
-      }
-    }
-  }
-}
-impl fmt::Debug for Procedure {
-  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    write!(f, "{}", self)
-  }
-}
+// #[derive(Clone, Eq, PartialEq)]
+// pub enum Procedure {
+//   FixedArgumentForm(Vec<String>, Vec<Expression>),
+//   VariableArgumentForm(Vec<String>, String, Vec<Expression>),
+//   BuiltinFixedArgumentForm(
+//     &'static str,
+//     fn(Vec<Expression>, Rc<RefCell<Scope>>) -> ProcedureResult,
+//     usize,
+//   ),
+//   #[allow(clippy::type_complexity)]
+//   BuiltinVariableArgumentForm(
+//     &'static str,
+//     fn(Vec<Expression>, Vec<Expression>, Rc<RefCell<Scope>>) -> ProcedureResult,
+//     usize,
+//   ),
+// }
+// impl Procedure {
+//   pub fn name(&self) -> String {
+//     match self {
+//       Procedure::FixedArgumentForm(_, _) => "#<procedure>".to_string(),
+//       Procedure::VariableArgumentForm(_, _, _) => "#<procedure>".to_string(),
+//       Procedure::BuiltinFixedArgumentForm(procedure_name, _, _) => procedure_name.to_string(),
+//       Procedure::BuiltinVariableArgumentForm(procedure_name, _, _) => procedure_name.to_string(),
+//     }
+//   }
+// }
+// impl fmt::Display for Procedure {
+//   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//     match self {
+//       Procedure::FixedArgumentForm(_, _) => write!(f, "#<procedure>"),
+//       Procedure::VariableArgumentForm(_, _, _) => write!(f, "#<procedure>"),
+//       Procedure::BuiltinFixedArgumentForm(procedure_name, _, _) => {
+//         write!(f, "#<procedure:{}>", procedure_name)
+//       }
+//       Procedure::BuiltinVariableArgumentForm(procedure_name, _, _) => {
+//         write!(f, "#<procedure:{}>", procedure_name)
+//       }
+//     }
+//   }
+// }
+// impl fmt::Debug for Procedure {
+//   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//     write!(f, "{}", self)
+//   }
+// }
 
 pub type BindingLayer = HashMap<String, Expression>;
 #[derive(Debug)]
@@ -162,17 +162,32 @@ pub struct BuiltinProcedure {
   pub argnames: Vec<String>,
   pub ticks: i32,
 }
-#[derive(Clone, Eq, PartialEq, Debug)]
-pub enum MyProcedure {
+#[derive(Clone, Eq, PartialEq)]
+pub enum Procedure {
   LambdaProcedure(LambdaProcedure),
   BuiltinProcedure(BuiltinProcedure),
 }
-impl MyProcedure {
+impl Procedure {
   pub fn argnames(&self) -> Vec<String> {
     match self {
-      MyProcedure::LambdaProcedure(lambda) => lambda.argnames.clone(),
-      MyProcedure::BuiltinProcedure(builtin) => builtin.argnames.clone(),
+      Procedure::LambdaProcedure(lambda) => lambda.argnames.clone(),
+      Procedure::BuiltinProcedure(builtin) => builtin.argnames.clone(),
     }
+  }
+}
+impl fmt::Display for Procedure {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    match self {
+      Procedure::LambdaProcedure(_) => write!(f, "#<procedure>"),
+      Procedure::BuiltinProcedure(builtin) => {
+        write!(f, "#<procedure:{}>", "builtin!!!!!") // TODO builtin names
+      }
+    }
+  }
+}
+impl fmt::Debug for Procedure {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    write!(f, "{}", self)
   }
 }
 
@@ -185,7 +200,7 @@ pub enum Expression {
   Procedure(Procedure),
   Null,
   Void,
-  MyProcedure(MyProcedure),
+  // MyProcedure(MyProcedure),
 }
 
 impl fmt::Display for Expression {
@@ -204,7 +219,7 @@ impl fmt::Display for Expression {
       Expression::Procedure(procedure) => write!(f, "{}", procedure),
       Expression::Null => write!(f, "'()"),
       Expression::Void => write!(f, "#<void>"),
-      Expression::MyProcedure(procedure) => write!(f, "MYSTERIOUS myprocedure"),
+      // Expression::MyProcedure(procedure) => write!(f, "MYSTERIOUS myprocedure"),
     }
   }
 }
@@ -230,7 +245,7 @@ impl Expression {
       Expression::Procedure(procedure) => format!("{}", procedure),
       Expression::Null => "'()".to_string(),
       Expression::Void => "#<void>".to_string(),
-      Expression::MyProcedure(procedure) => "mysterious myprocedure".to_string(),
+      // Expression::MyProcedure(procedure) => "mysterious myprocedure".to_string(),
     }
   }
 }
