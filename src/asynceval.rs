@@ -267,7 +267,7 @@ mod test {
                     $(let $var = $val;)*
                     ($return_line, bindings)
                 },
-                argnames: vec![$(stringify!($argname).to_string())*],
+                argnames: vec![$(stringify!($argname).to_string()),*],
                 ticks: 5,
             }))
         };
@@ -281,13 +281,13 @@ mod test {
         //     argnames: vec!["a".to_string()],
         //     ticks: 5,
         // })));
-        state.bindings.bind("double", builtin!{
-            fn double (a:Number) {
-                let b = int!(2*a);
-                b
+        state.bindings.bind("add", builtin!{
+            fn double (a:Number, b:Number) {
+                let c = int!(a + b);
+                c
             }
         });
-        state = state.begin(parse("(double 6)").unwrap());
+        state = state.begin(parse("(add 5 7)").unwrap());
         println!("{:?}\n", state);
         state = state.run_to_completion();
         println!("{:?}\n", state);
