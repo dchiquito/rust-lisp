@@ -239,18 +239,47 @@ impl State {
 mod test {
     use super::*;
 
+    #[macro_export]
+    macro_rules! builtin {
+    //   ($arg:expr, $body:expr) => {
+    //     Expression::Procedure(Procedure::FixedArgumentForm($arg, $body))
+    //   };
+    //   ($arg:expr , $vararg:expr, $body:expr) => {
+    //     Expression::Procedure(Procedure::VariableArgumentForm($arg, $vararg, $body))
+    //   };
+        (fn $name:ident ($($argname:ident),*) {$(let $var:ident = $val:expr);* ; $return_line:expr}) => {
+            Expression::Procedure(Procedure::BuiltinProcedure(BuiltinProcedure {
+                program: |bindings| {
+                    $(
+                        let $argname = bindings.get(stringify!($argname)).unwrap().clone();
+                    )*
+                    $(let $var = $val;)*
+                    ($return_line, bindings)
+                },
+                argnames: vec![$(stringify!($argname).to_string())*],
+                ticks: 5,
+            }))
+        };
+    }
+
     #[test]
     fn test_foo() {
         let mut state = State::empty();
-        state.bindings.bind("foo", Expression::Procedure(Procedure::BuiltinProcedure(BuiltinProcedure {
-            program: |bindings| (bindings.get("a").unwrap().clone(), bindings),
-            argnames: vec!["a".to_string()],
-            ticks: 5,
-        })));
-        state = state.begin(parse("(foo 6)").unwrap());
+        // state.bindings.bind("foo", Expression::Procedure(Procedure::BuiltinProcedure(BuiltinProcedure {
+        //     program: |bindings| (bindings.get("a").unwrap().clone(), bindings),
+        //     argnames: vec!["a".to_string()],
+        //     ticks: 5,
+        // })));
+        state.bindings.bind("double", builtin!{
+            fn double (a) {
+                let twoa = int!(match a {Expression::Number(Number::Integer(aa)) => 2*aa, _ => panic!("NaN")});
+                twoa
+            }
+        });
+        state = state.begin(parse("(double 6)").unwrap());
         println!("{:?}\n", state);
         state = state.run_to_completion();
         println!("{:?}\n", state);
-        assert_eq!(state.value, Some(int!(6)))
+        assert_eq!(state.value, Some(int!(12)))
     }
 }
