@@ -241,17 +241,6 @@ mod test {
 
     #[test]
     fn test_foo() {
-        // let mut state = State::empty().begin(
-        //     list!(
-        //         Expression::MyProcedure(MyProcedure::BuiltinProcedure(BuiltinProcedure {
-        //             program: |bindings| (bindings.get("b").unwrap().clone(), bindings),
-        //             argnames: vec!["a".to_string(), "b".to_string()],
-        //             ticks: 6,
-        //         })),
-        //         int!(2),
-        //         int!(3)
-        //     ),
-        // );
         let mut state = State::empty();
         state.bindings.bind("foo", Expression::MyProcedure(MyProcedure::BuiltinProcedure(BuiltinProcedure {
             program: |bindings| (bindings.get("a").unwrap().clone(), bindings),
