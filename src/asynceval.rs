@@ -240,6 +240,16 @@ mod test {
     use super::*;
 
     #[macro_export]
+    macro_rules! _builtin_arg_type {
+        ($bindings:ident => $argname:ident : Number) => {
+            let $argname = match $bindings.get(stringify!($argname)).unwrap().clone() {
+                Expression::Number(Number::Integer(integer)) => integer,
+                _ => panic!("Not an integer"),
+            };
+        };
+    }
+
+    #[macro_export]
     macro_rules! builtin {
     //   ($arg:expr, $body:expr) => {
     //     Expression::Procedure(Procedure::FixedArgumentForm($arg, $body))
@@ -247,11 +257,12 @@ mod test {
     //   ($arg:expr , $vararg:expr, $body:expr) => {
     //     Expression::Procedure(Procedure::VariableArgumentForm($arg, $vararg, $body))
     //   };
-        (fn $name:ident ($($argname:ident),*) {$(let $var:ident = $val:expr);* ; $return_line:expr}) => {
+        (fn $name:ident ($($argname:ident : $argtype:ident),*) {$(let $var:ident = $val:expr);* ; $return_line:expr}) => {
             Expression::Procedure(Procedure::BuiltinProcedure(BuiltinProcedure {
                 program: |bindings| {
                     $(
-                        let $argname = bindings.get(stringify!($argname)).unwrap().clone();
+                        // let $argname = bindings.get(stringify!($argname)).unwrap().clone();
+                        _builtin_arg_type!(bindings => $argname:$argtype);
                     )*
                     $(let $var = $val;)*
                     ($return_line, bindings)
@@ -271,9 +282,9 @@ mod test {
         //     ticks: 5,
         // })));
         state.bindings.bind("double", builtin!{
-            fn double (a) {
-                let twoa = int!(match a {Expression::Number(Number::Integer(aa)) => 2*aa, _ => panic!("NaN")});
-                twoa
+            fn double (a:Number) {
+                let b = int!(2*a);
+                b
             }
         });
         state = state.begin(parse("(double 6)").unwrap());
