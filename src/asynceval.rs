@@ -247,6 +247,9 @@ mod test {
                 _ => panic!("Not an integer"),
             };
         };
+        ($bindings:ident => $argname:ident : Any) => {
+            let $argname = $bindings.get(stringify!($argname)).unwrap().clone();
+        };
     }
 
     #[macro_export]
@@ -281,13 +284,12 @@ mod test {
         //     argnames: vec!["a".to_string()],
         //     ticks: 5,
         // })));
-        state.bindings.bind("add", builtin!{
-            fn double (a:Number, b:Number) {
-                let c = int!(a + b);
-                c
+        state.bindings.bind("pass", builtin!{
+            fn double (b:Any) {
+                ;b
             }
         });
-        state = state.begin(parse("(add 5 7)").unwrap());
+        state = state.begin(parse("(pass 7)").unwrap());
         println!("{:?}\n", state);
         state = state.run_to_completion();
         println!("{:?}\n", state);
