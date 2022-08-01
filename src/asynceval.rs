@@ -4,12 +4,19 @@ use std::collections::VecDeque;
 /*
 Planning
 Basic types
-Bindings - just a HashMap<String, Expression>
+BindingLayer - just a HashMap<String, Expression>
+Bindings - a global BindingLayer and a stack of BindingLayers. Each procedure call has a new scope, represented by a new BindingLayer.
 Procedure - enum of lambdas and builtins. Lambdas always take evaluated arguments, but some builtins take in the arguments without evaluating them (like quote).
+
+The VM is a state machine that mutates in one tick increments.
+It is built around a stack of Frames (computations in progress) and a Bindings stack (scoped variables).
+It is sadly more complex than a simple call stack, since computations must be performed to determine the arguments to a procedure call.
+When a frame performs its last tick, it is removed from the stack and passes an Expression value up for the parent Frame to consume.
+When the final frame finishes computation, the resulting Expression is stored in the State as the result of the evaluation.
 EvaluateFrame - an expression to be evaluated. tick behavior depends on type:
     If it's a primitive, it is pushed into the parent frame, because the parent frame asked for it to be evaluated.
     If it's a procedure call, it is converted into an ArgParseFrame.
-ArgParseFrame - a Procedure, a Bindings that is being generated, a list of argument names, and a cons list of provided arguments.
+ArgParseFrame - a Procedure, a Bindings that is being generated, a list of argument names, and a list of provided arguments.
         If argnames+args are non-empty, then the first arg is popped off.
             If it is a primitive, it is assigned to the argname in the inner binding and the tick completes.
             If it is procedure call, then a new Frame is pushed calling that procedure.
@@ -19,7 +26,7 @@ BuiltinCallFrame - a BuiltinProcedure, a Bindings, and a tick counter
     Builtins are easy, they just idle until their tick timer lapses, then return the result of calling the rust function.
 LambdaCallFrame - a cons list of expressions to evaluate and a Bindings.
     The expression list is just the program from the LambdaProcedure, but cloned.
-    Ticking involves popping off the first expression from the list and evaluating it onto the stack.
+    Ticking involves popping off the first expression from the list and pushing a new EvaluateFrame onto the stack.
 Frame - an enum of all *Frame types.
 State - a global Bindings and a stack (vec) of Frames. Every tick
 */
@@ -192,7 +199,7 @@ impl State {
         }
     }
     pub fn begin(mut self, expression: Expression) -> State {
-        self.push_frame(Frame::EvaluateFrame(EvaluateFrame {expression}))
+        self.push_frame(Frame::EvaluateFrame(EvaluateFrame { expression }))
     }
     pub fn tick(mut self) -> State {
         if self.value.is_none() {
@@ -242,15 +249,12 @@ mod test {
     #[test]
     fn test_foo() {
         let mut state = State::empty();
-        // state.bindings.bind("foo", Expression::Procedure(Procedure::BuiltinProcedure(BuiltinProcedure {
-        //     program: |bindings| (bindings.get("a").unwrap().clone(), bindings),
-        //     argnames: vec!["a".to_string()],
-        //     ticks: 5,
-        // })));
-        state.bindings.bind("pass", builtin!{
-            fn add (a:Number, b:Number) => int!(a+b)
-        });
-        state = state.begin(parse("(pass 7)").unwrap());
+        state.bindings.bind_builtin(
+            builtin! {
+                fn + (a:Number, b:Number) => int!(a+b)
+            },
+        );
+        state = state.begin(parse("(+ 7 (+ 2 4))").unwrap());
         println!("{:?}\n", state);
         state = state.run_to_completion();
         println!("{:?}\n", state);

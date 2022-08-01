@@ -136,6 +136,14 @@ impl Bindings {
     let bindopt = self.stack.last_mut().unwrap_or(&mut self.globals);
     bindopt.insert(String::from(variable), value);
   }
+  pub fn bind_builtin(&mut self, expr: Expression) {
+    match expr {
+      Expression::Procedure(Procedure::BuiltinProcedure(builtin)) => {
+        self.bind(&builtin.name.clone(), Expression::Procedure(Procedure::BuiltinProcedure(builtin)));
+      },
+      _ => {}
+    }
+  }
   pub fn get(&self, variable: &str) -> Option<Expression> {
     self
       .stack
@@ -158,6 +166,7 @@ pub struct LambdaProcedure {
 }
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct BuiltinProcedure {
+  pub name: String,
   pub program: fn(Bindings) -> (Expression, Bindings),
   pub argnames: Vec<String>,
   pub ticks: i32,
@@ -315,15 +324,16 @@ macro_rules! _builtin_arg_type {
 
 #[macro_export]
 macro_rules! builtin {
-    (fn $name:ident ($($argname:ident : $argtype:ident),*) => $return_line:expr) => {
+    (fn $name:tt ($($argname:ident : $argtype:ident),*) => $return_line:expr) => {
       builtin!{
         fn $name ($($argname:$argtype),*) {
           ;$return_line
         }
       }
     };
-    (fn $name:ident ($($argname:ident : $argtype:ident),*) {$(let $var:ident = $val:expr);* ; $return_line:expr}) => {
+    (fn $name:tt ($($argname:ident : $argtype:ident),*) {$(let $var:ident = $val:expr);* ; $return_line:expr}) => {
         Expression::Procedure(Procedure::BuiltinProcedure(BuiltinProcedure {
+            name: stringify!($name).to_string(),
             program: |bindings| {
                 $(
                     // let $argname = bindings.get(stringify!($argname)).unwrap().clone();
