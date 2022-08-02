@@ -265,7 +265,7 @@ impl Frame {
 }
 
 #[derive(Debug)]
-struct State {
+pub struct State {
     bindings: Bindings,
     frames: Vec<Frame>,
     value: Option<Result<Expression, EvaluationError>>,
