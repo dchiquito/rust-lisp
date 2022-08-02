@@ -1,5 +1,6 @@
 use crate::*;
 use std::collections::VecDeque;
+use std::fmt;
 
 /*
 Planning
@@ -31,7 +32,84 @@ Frame - an enum of all *Frame types.
 State - a global Bindings and a stack (vec) of Frames. Every tick
 */
 
-// (add (sub 6 5) 2) => 3
+#[derive(Debug, Eq, PartialEq)]
+pub enum EvaluationErrorCause {
+    WrongNumberOfArguments(String, usize, usize),
+    WrongNumberOfVariableArguments(String, usize, usize),
+    InvalidArgument(String, String, Expression),
+    UndefinedSymbol(String),
+    DivideByZero(Number),
+    NotAProcedure(Expression),
+}
+impl fmt::Display for EvaluationErrorCause {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            EvaluationErrorCause::WrongNumberOfArguments(procedure_name, expected, actual) => {
+                write!(
+                    fmt,
+                    "wrong number of arguments for {}: expected {}, got {}",
+                    procedure_name, expected, actual
+                )
+            }
+            EvaluationErrorCause::WrongNumberOfVariableArguments(
+                procedure_name,
+                expected,
+                actual,
+            ) => {
+                write!(
+                    fmt,
+                    "wrong number of arguments for {}: expected {} or more, got {}",
+                    procedure_name, expected, actual
+                )
+            }
+            EvaluationErrorCause::InvalidArgument(procedure_name, expected, actual) => {
+                write!(
+                    fmt,
+                    "invalid argument for {}: expected {}, got {}",
+                    procedure_name, expected, actual
+                )
+            }
+            EvaluationErrorCause::UndefinedSymbol(symbol) => {
+                write!(fmt, "undefined symbol {}", symbol)
+            }
+            EvaluationErrorCause::DivideByZero(quotient) => {
+                write!(fmt, "attempted to divide {} by 0", quotient)
+            }
+            EvaluationErrorCause::NotAProcedure(non_procedure) => {
+                write!(
+                    fmt,
+                    "expected a procedure, given {}",
+                    non_procedure.outer_representation()
+                )
+            }
+        }
+    }
+}
+#[derive(Debug, Eq, PartialEq)]
+pub struct EvaluationError {
+    cause: EvaluationErrorCause,
+}
+impl EvaluationError {
+    pub fn invalid_argument(
+        procedure_name: &str,
+        expected: &str,
+        actual: &Expression,
+    ) -> EvaluationError {
+        EvaluationError {
+            cause: EvaluationErrorCause::InvalidArgument(
+                procedure_name.to_string(),
+                expected.to_string(),
+                actual.clone(),
+            ),
+        }
+    }
+}
+impl fmt::Display for EvaluationError {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        self.cause.fmt(fmt)
+    }
+}
+// pub type EvaluationResult = Result<Expression, EvaluationError>;
 
 trait FrameTrait {
     fn tick(self, state: State) -> State;
@@ -54,11 +132,11 @@ impl FrameTrait for EvaluateFrame {
                             Expression::Procedure(procedure) => {
                                 state.parse_args(procedure.clone(), args)
                             }
-                            _ => panic!("non-procedure"),
+                            _ => state.panic(EvaluationErrorCause::NotAProcedure(procedure)),
                         }
                     }
                     Expression::Procedure(procedure) => state.parse_args(procedure, args),
-                    _ => panic!("non-symbol"),
+                    _ => state.panic(EvaluationErrorCause::NotAProcedure(expr)),
                 }
             }
             expr => state.pass_value_up(expr),
@@ -74,6 +152,7 @@ pub fn arg_vec(list: &Expression) -> VecDeque<Expression> {
         sublist = cons.cdr.as_ref();
     }
     if sublist != &null!() {
+        // TODO wrap this in a result
         panic!("aag can't parse args")
     }
     args
@@ -107,7 +186,8 @@ impl FrameTrait for ArgParseFrame {
             if self.argnames.is_empty() {
                 state.invoke(self.procedure, self.new_bindings)
             } else {
-                panic!("not enough args")
+                // TODO check this before ticking into the arguments
+                state.panic(EvaluationErrorCause::WrongNumberOfArguments("#<procedure>".to_string(), 666, 666))
             }
         } else {
             let arg_expression = self.arguments.pop_front().unwrap();
@@ -188,7 +268,7 @@ impl Frame {
 struct State {
     bindings: Bindings,
     frames: Vec<Frame>,
-    value: Option<Expression>,
+    value: Option<Result<Expression, EvaluationError>>,
 }
 impl State {
     pub fn empty() -> State {
@@ -228,7 +308,7 @@ impl State {
         if let Some(frame) = self.frames.last_mut() {
             frame.take_value(value);
         } else {
-            self.value = Some(value);
+            self.value = Some(Ok(value));
         }
         self
     }
@@ -240,6 +320,10 @@ impl State {
         };
         self.push_frame(frame)
     }
+    fn panic(mut self, cause: EvaluationErrorCause) -> State {
+        self.value = Some(Err(EvaluationError { cause }));
+        self
+    }
 }
 
 #[cfg(test)]
@@ -249,15 +333,14 @@ mod test {
     #[test]
     fn test_foo() {
         let mut state = State::empty();
-        state.bindings.bind_builtin(
-            builtin! {
-                fn + (a:Number, b:Number) => int!(a+b)
-            },
-        );
-        state = state.begin(parse("(+ 7 (+ 2 4))").unwrap());
+        state.bindings.bind_builtin(builtin! {
+            fn + (a:Number, b:Number) => int!(a+b)
+        });
+        state.bindings.bind("foo", int!(6));
+        state = state.begin(parse("(foo)").unwrap());
         println!("{:?}\n", state);
         state = state.run_to_completion();
         println!("{:?}\n", state);
-        assert_eq!(state.value, Some(int!(12)))
+        assert_eq!(state.value, Some(Ok(int!(12))))
     }
 }
