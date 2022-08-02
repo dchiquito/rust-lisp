@@ -1,4 +1,4 @@
-mod asynceval;
+pub mod asynceval; // TODO why is this necessary here but not on parse?
 mod parse;
 mod token;
 mod types;
