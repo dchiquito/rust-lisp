@@ -139,8 +139,11 @@ impl Bindings {
   pub fn bind_builtin(&mut self, expr: Expression) {
     match expr {
       Expression::Procedure(Procedure::BuiltinProcedure(builtin)) => {
-        self.bind(&builtin.name.clone(), Expression::Procedure(Procedure::BuiltinProcedure(builtin)));
-      },
+        self.bind(
+          &builtin.name.clone(),
+          Expression::Procedure(Procedure::BuiltinProcedure(builtin)),
+        );
+      }
       _ => {}
     }
   }
@@ -164,13 +167,25 @@ pub struct LambdaProcedure {
   program: Box<Expression>,
   argnames: Vec<String>,
 }
-#[derive(Clone, Eq, PartialEq, Debug)]
+#[derive(Clone)]
 pub struct BuiltinProcedure {
   pub name: String,
-  pub program: fn(Bindings) -> (Expression, Bindings),
+  pub program: fn(&mut Bindings) -> Expression,
   pub argnames: Vec<String>,
   pub ticks: i32,
 }
+impl PartialEq for BuiltinProcedure {
+  fn eq(&self, other: &BuiltinProcedure) -> bool {
+    self.name == other.name
+  }
+}
+impl Eq for BuiltinProcedure {}
+impl fmt::Debug for BuiltinProcedure {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    write!(f, "#<procedure:{}>", self.name)
+  }
+}
+
 #[derive(Clone, Eq, PartialEq)]
 pub enum Procedure {
   LambdaProcedure(LambdaProcedure),
@@ -189,7 +204,7 @@ impl fmt::Display for Procedure {
     match self {
       Procedure::LambdaProcedure(_) => write!(f, "#<procedure>"),
       Procedure::BuiltinProcedure(builtin) => {
-        write!(f, "#<procedure:{}>", "builtin!!!!!") // TODO builtin names
+        write!(f, "#<procedure:{}>", builtin.name) // TODO builtin names
       }
     }
   }
@@ -311,15 +326,15 @@ macro_rules! boolean {
 // }
 #[macro_export]
 macro_rules! _builtin_arg_type {
-    ($bindings:ident => $argname:ident : Number) => {
-        let $argname = match $bindings.get(stringify!($argname)).unwrap().clone() {
-            Expression::Number(Number::Integer(integer)) => integer,
-            _ => panic!("Not an integer"),
-        };
+  ($bindings:ident => $argname:ident : Number) => {
+    let $argname = match $bindings.get(stringify!($argname)).unwrap().clone() {
+      Expression::Number(Number::Integer(integer)) => integer,
+      _ => panic!("Not an integer"),
     };
-    ($bindings:ident => $argname:ident : Any) => {
-        let $argname = $bindings.get(stringify!($argname)).unwrap().clone();
-    };
+  };
+  ($bindings:ident => $argname:ident : Any) => {
+    let $argname = $bindings.get(stringify!($argname)).unwrap().clone();
+  };
 }
 
 #[macro_export]
@@ -340,7 +355,7 @@ macro_rules! builtin {
                     _builtin_arg_type!(bindings => $argname:$argtype);
                 )*
                 $(let $var = $val;)*
-                ($return_line, bindings)
+                $return_line
             },
             argnames: vec![$(stringify!($argname).to_string()),*],
             ticks: 5,

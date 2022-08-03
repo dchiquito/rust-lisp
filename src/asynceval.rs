@@ -112,7 +112,7 @@ impl fmt::Display for EvaluationError {
 // pub type EvaluationResult = Result<Expression, EvaluationError>;
 
 trait FrameTrait {
-    fn tick(self, state: State) -> State;
+    fn tick(self, state: &mut State);
 }
 
 #[derive(Debug)]
@@ -120,7 +120,7 @@ struct EvaluateFrame {
     expression: Expression,
 }
 impl FrameTrait for EvaluateFrame {
-    fn tick(self, state: State) -> State {
+    fn tick(self, state: &mut State) {
         match self.expression {
             Expression::Cons(cons) => {
                 let expr = cons.car.as_ref().clone();
@@ -181,7 +181,7 @@ impl ArgParseFrame {
     }
 }
 impl FrameTrait for ArgParseFrame {
-    fn tick(mut self, mut state: State) -> State {
+    fn tick(mut self, state: &mut State) {
         if self.arguments.is_empty() {
             if self.argnames.is_empty() {
                 state.invoke(self.procedure, self.new_bindings)
@@ -191,7 +191,7 @@ impl FrameTrait for ArgParseFrame {
             }
         } else {
             let arg_expression = self.arguments.pop_front().unwrap();
-            state = state.push_frame(Frame::ArgParseFrame(self));
+            state.push_frame(Frame::ArgParseFrame(self));
             state.push_frame(Frame::EvaluateFrame(EvaluateFrame {
                 expression: arg_expression,
             }))
@@ -213,7 +213,7 @@ impl BuiltinCallFrame {
     }
 }
 impl FrameTrait for BuiltinCallFrame {
-    fn tick(mut self, mut state: State) -> State {
+    fn tick(mut self, state: &mut State) {
         println!("ticky {} {}", self.ticks, self.procedure.ticks);
         self.ticks += 1;
         if self.ticks < self.procedure.ticks {
@@ -222,8 +222,7 @@ impl FrameTrait for BuiltinCallFrame {
         } else {
             println!("returno");
             let program = self.procedure.program;
-            let (value, new_bindings) = program(state.bindings);
-            state.bindings = new_bindings;
+            let value = program(&mut state.bindings);
             state.pass_value_up(value)
         }
     }
@@ -245,7 +244,7 @@ enum Frame {
     LambdaCallFrame(LambdaCallFrame),
 }
 impl Frame {
-    fn tick(self, state: State) -> State {
+    fn tick(self, state: &mut State) {
         match self {
             Frame::EvaluateFrame(frame) => frame.tick(state),
             Frame::ArgParseFrame(frame) => frame.tick(state),
@@ -278,41 +277,36 @@ impl State {
             value: None,
         }
     }
-    pub fn begin(mut self, expression: Expression) -> State {
+    pub fn begin(&mut self, expression: Expression) {
         self.push_frame(Frame::EvaluateFrame(EvaluateFrame { expression }))
     }
-    pub fn tick(mut self) -> State {
+    pub fn tick(&mut self) {
         if self.value.is_none() {
             let frame = self.frames.pop().unwrap();
-            frame.tick(self)
-        } else {
-            self
+            frame.tick(self);
         }
     }
-    pub fn run_to_completion(mut self) -> State {
+    pub fn run_to_completion(&mut self){
         while self.value == None {
-            self = self.tick();
+            self.tick();
         }
-        self
     }
-    fn push_frame(mut self, frame: Frame) -> State {
+    fn push_frame(&mut self, frame: Frame) {
         self.frames.push(frame);
-        self
     }
-    fn parse_args(mut self, procedure: Procedure, arguments: Expression) -> State {
+    fn parse_args(&mut self, procedure: Procedure, arguments: Expression) {
         self.push_frame(Frame::ArgParseFrame(ArgParseFrame::new(
             procedure, arguments,
         )))
     }
-    fn pass_value_up(mut self, value: Expression) -> State {
+    fn pass_value_up(&mut self, value: Expression) {
         if let Some(frame) = self.frames.last_mut() {
             frame.take_value(value);
         } else {
             self.value = Some(Ok(value));
         }
-        self
     }
-    fn invoke(mut self, procedure: Procedure, bindings: BindingLayer) -> State {
+    fn invoke(&mut self, procedure: Procedure, bindings: BindingLayer) {
         self.bindings.push(bindings);
         let frame = match procedure {
             Procedure::BuiltinProcedure(builtin) => BuiltinCallFrame::new(builtin),
@@ -320,9 +314,8 @@ impl State {
         };
         self.push_frame(frame)
     }
-    fn panic(mut self, cause: EvaluationErrorCause) -> State {
+    fn panic(&mut self, cause: EvaluationErrorCause) {
         self.value = Some(Err(EvaluationError { cause }));
-        self
     }
 }
 
@@ -337,9 +330,9 @@ mod test {
             fn + (a:Number, b:Number) => int!(a+b)
         });
         state.bindings.bind("foo", int!(6));
-        state = state.begin(parse("(foo)").unwrap());
+        state.begin(parse("(foo)").unwrap());
         println!("{:?}\n", state);
-        state = state.run_to_completion();
+        state.run_to_completion();
         println!("{:?}\n", state);
         assert_eq!(state.value, Some(Ok(int!(12))))
     }
