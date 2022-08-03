@@ -32,7 +32,7 @@ Frame - an enum of all *Frame types.
 State - a global Bindings and a stack (vec) of Frames. Every tick
 */
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub enum EvaluationErrorCause {
     WrongNumberOfArguments(String, usize, usize),
     WrongNumberOfVariableArguments(String, usize, usize),
@@ -85,7 +85,7 @@ impl fmt::Display for EvaluationErrorCause {
         }
     }
 }
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct EvaluationError {
     cause: EvaluationErrorCause,
 }
@@ -267,7 +267,7 @@ impl Frame {
 pub struct State {
     bindings: Bindings,
     frames: Vec<Frame>,
-    pub value: Option<Result<Expression, EvaluationError>>,
+    value: Option<Result<Expression, EvaluationError>>,
 }
 impl State {
     pub fn empty() -> State {
@@ -284,6 +284,13 @@ impl State {
         if self.value.is_none() {
             let frame = self.frames.pop().unwrap();
             frame.tick(self);
+        }
+    }
+    pub fn get_value(&mut self) -> Option<Result<Expression, EvaluationError>> {
+        if self.value.is_some() {
+            self.value.clone()
+        } else {
+            None
         }
     }
     pub fn run_to_completion(&mut self) {
