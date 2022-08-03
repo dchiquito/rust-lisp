@@ -267,7 +267,7 @@ impl Frame {
 pub struct State {
     bindings: Bindings,
     frames: Vec<Frame>,
-    value: Option<Result<Expression, EvaluationError>>,
+    pub value: Option<Result<Expression, EvaluationError>>,
 }
 impl State {
     pub fn empty() -> State {
@@ -286,7 +286,7 @@ impl State {
             frame.tick(self);
         }
     }
-    pub fn run_to_completion(&mut self){
+    pub fn run_to_completion(&mut self) {
         while self.value == None {
             self.tick();
         }
