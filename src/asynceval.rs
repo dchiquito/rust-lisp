@@ -277,6 +277,9 @@ impl State {
             value: None,
         }
     }
+    pub fn bind_builtin(&mut self, builtin: Expression) {
+        self.bindings.bind_builtin(builtin);
+    }
     pub fn begin(&mut self, expression: Expression) {
         self.push_frame(Frame::EvaluateFrame(EvaluateFrame { expression }))
     }
@@ -333,11 +336,11 @@ mod test {
     #[test]
     fn test_foo() {
         let mut state = State::empty();
-        state.bindings.bind_builtin(builtin! {
+        state.bind_builtin(builtin! {
             fn + (a:Number, b:Number) => int!(a+b)
         });
         state.bindings.bind("foo", int!(6));
-        state.begin(parse("(foo)").unwrap());
+        state.begin(parse("(- 1 2)").unwrap());
         println!("{:?}\n", state);
         state.run_to_completion();
         println!("{:?}\n", state);
