@@ -127,12 +127,15 @@ impl FrameTrait for EvaluateFrame {
                 let args = cons.cdr.as_ref().clone();
                 match expr {
                     Expression::Symbol(procedure_name) => {
-                        let procedure = state.bindings.get(&procedure_name).unwrap();
-                        match procedure {
-                            Expression::Procedure(procedure) => {
-                                state.parse_args(procedure.clone(), args)
+                        if let Some(procedure) = state.bindings.get(&procedure_name) {
+                            match procedure {
+                                Expression::Procedure(procedure) => {
+                                    state.parse_args(procedure.clone(), args)
+                                }
+                                _ => state.panic(EvaluationErrorCause::NotAProcedure(procedure)),
                             }
-                            _ => state.panic(EvaluationErrorCause::NotAProcedure(procedure)),
+                        } else {
+                            state.panic(EvaluationErrorCause::UndefinedSymbol(procedure_name))
                         }
                     }
                     Expression::Procedure(procedure) => state.parse_args(procedure, args),
@@ -187,7 +190,11 @@ impl FrameTrait for ArgParseFrame {
                 state.invoke(self.procedure, self.new_bindings)
             } else {
                 // TODO check this before ticking into the arguments
-                state.panic(EvaluationErrorCause::WrongNumberOfArguments("#<procedure>".to_string(), 666, 666))
+                state.panic(EvaluationErrorCause::WrongNumberOfArguments(
+                    "#<procedure>".to_string(),
+                    666,
+                    666,
+                ))
             }
         } else {
             let arg_expression = self.arguments.pop_front().unwrap();
@@ -334,16 +341,29 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_foo() {
+    fn test_call_builtin() {
         let mut state = State::empty();
         state.bind_builtin(builtin! {
             fn + (a:Number, b:Number) => int!(a+b)
         });
         state.bindings.bind("foo", int!(6));
+        state.begin(parse("(+ 1 foo)").unwrap());
+        state.run_to_completion();
+        assert_eq!(state.value, Some(Ok(int!(7))))
+    }
+
+    #[test]
+    fn test_foo() {
+        let mut state = State::empty();
+        state.bindings.bind("foo", int!(6));
         state.begin(parse("(- 1 2)").unwrap());
         println!("{:?}\n", state);
         state.run_to_completion();
-        println!("{:?}\n", state);
-        assert_eq!(state.value, Some(Ok(int!(12))))
+        assert_eq!(
+            state.value,
+            Some(Err(EvaluationError {
+                cause: EvaluationErrorCause::UndefinedSymbol("-".to_string())
+            }))
+        )
     }
 }
